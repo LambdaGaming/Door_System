@@ -38,8 +38,15 @@ local allowed = {
 
 local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 
-local function Knock( ply, sound )
-	ply:EmitSound( sound )
+local function KeySound( ply, lock )
+	ply:EmitSound( "npc/metropolice/gear"..math.random( 1, 7 )..".wav" )
+	timer.Simple( 1, function()
+		if lock then
+			ply:EmitSound( "doors/door_latch1.wav" )
+		else
+			ply:EmitSound( "doors/door_latch3.wav" )
+		end
+	end )
 end
 
 function SWEP:PrimaryAttack()
@@ -49,11 +56,10 @@ function SWEP:PrimaryAttack()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
     if allowed[tr:GetClass()] then
 		if doorowner == self.Owner then
-			tr:Fire( "Lock" )
-			tr:EmitSound( "npc/metropolice/gear"..math.Rand( 1, 7 )..".wav" )
-			self.Owner:AnimSetGestureSequence( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_GMOD_GESTURE_ITEM_PLACE )
+			tr:Fire( "lock", "", 0 )
+			KeySound( self.Owner, true )
 		else
-			Knock( self.Owner, "physics/wood/wood_crate_impact_hard2.wav" )
+			self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" )
 		end
 	end
     self:SetNextPrimaryFire( CurTime() + 0.1 )
@@ -66,11 +72,10 @@ function SWEP:SecondaryAttack()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
     if allowed[tr:GetClass()] then
 		if doorowner == self.Owner then
-			tr:Fire( "Unlock" )
-			tr:EmitSound( "doors/latchunlocked1.wav" )
-			self.Owner:AnimSetGestureSequence( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_GMOD_GESTURE_ITEM_PLACE )
+			tr:Fire( "unlock", "", 0 )
+			KeySound( self.Owner, false )
 		else
-			Knock( self.Owner, "physics/wood/wood_crate_impact_hard2.wav" )
+			self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" )
 		end
 	end
     self:SetNextSecondaryFire( CurTime() + 0.1 )

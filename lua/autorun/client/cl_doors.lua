@@ -36,7 +36,6 @@ local function OpenDoorMenu( ply, door )
 	end
 	buybutton.DoClick = function()
 		net.Start( "BuyDoor" )
-		net.WriteEntity( ply )
 		net.WriteEntity( door )
 		net.SendToServer()
 		menu:Close()
@@ -51,7 +50,6 @@ local function OpenDoorMenu( ply, door )
 	end
 	sellbutton.DoClick = function()
 		net.Start( "SellDoor" )
-		net.WriteEntity( ply )
 		net.WriteEntity( door )
 		net.SendToServer()
 		menu:Close()
@@ -64,11 +62,10 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 	local ent = ply:GetEyeTrace().Entity
 	local color_red = Color( 255, 0, 0 )
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
-	local null = "[NULL Entity]"
 	if ply.MenuOpen then return end
 	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
-		if tostring( doorowner ) == null then
-			draw.SimpleText( "Owner: "..doorowner:Name(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		if IsValid( doorowner ) then
+			draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		else
 			draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
@@ -79,8 +76,9 @@ end )
 hook.Add( "PlayerButtonDown", "DoorButtons", function( ply, button )
 	local f2 = KEY_F2
 	local ent = ply:GetEyeTrace().Entity
+	if !IsFirstTimePredicted() then return end
 	if ply.MenuOpen then return end
 	if IsValid( ent ) and button == f2 and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
-		OpenDoorMenu( ply, door )
+		OpenDoorMenu( ply, ent )
 	end
 end )
