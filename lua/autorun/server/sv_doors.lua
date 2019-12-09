@@ -2,7 +2,18 @@
 util.AddNetworkString( "OwnDoor" )
 net.Receive( "OwnDoor", function( len, ply )
 	local ent = net.ReadEntity()
+	local remoteply = net.ReadEntity()
+	local override = net.ReadBool()
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
+	if override then
+		ent:SetNWEntity( "DoorOwner", remoteply )
+		if DarkRP then
+			DarkRP.notify( ply, 0, 6, "Door ownership override successful." )
+			return
+		end
+		ply:ChatPrint( "Door ownership override successful." )
+		return
+	end
 	if IsValid( doorowner ) then
 		if doorowner != ply then
 			if DarkRP then

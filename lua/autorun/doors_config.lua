@@ -2,9 +2,10 @@
 --[[
 	Planned Features:
 	1. Simple door ownership through F2 menu *DONE*
-	2. Support for multiple owners *NOT DONE*
-	3. Support for restrictive ownership (police only, admin only, etc) *NOT DONE*
-	4. Support for saving ownership settings in the server's SQL database *NOT DONE*
+	2. Admin settings through F2 menu *NOT DONE*
+	3. Support for multiple owners *NOT DONE*
+	4. Support for restrictive ownership (police only, admin only, etc) *NOT DONE*
+	5. Support for saving ownership settings in the server's SQL database *NOT DONE*
 ]]
 
 DOOR_CONFIG_MENU_COLOR = Color( 49, 53, 61, 200 ) --Color of the menu background

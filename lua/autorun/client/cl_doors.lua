@@ -18,7 +18,7 @@ local OpenDoorMenuAdmin
 
 local function OpenDoorConfig( ply, door )
 	local menu = vgui.Create( "DFrame" )
-	menu:SetTitle( "Admin Door Config" )
+	menu:SetTitle( "Admin Config" )
 	menu:SetSize( 180, 300 )
 	menu:Center()
 	menu:MakePopup()
@@ -56,6 +56,46 @@ local function OpenDoorConfig( ply, door )
 		net.WriteBool( true )
 		net.SendToServer()
 		menu:Close()
+	end
+	local ownerbutton = vgui.Create( "DButton", menu )
+	ownerbutton:SetText( "Add Owner" )
+	ownerbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	ownerbutton:SetPos( 30, 110 )
+	ownerbutton:SetSize( 150, 30 )
+	ownerbutton:CenterHorizontal()
+	ownerbutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	ownerbutton.DoClick = function()
+		local ownerlist = vgui.Create( "DComboBox", menu )
+		ownerlist:SetPos( 30, 110 )
+		ownerlist:SetSize( 100, 20 )
+		ownerlist:CenterHorizontal()
+		ownerlist:SetValue( "Select Player" )
+		for k,v in pairs( player.GetAll() ) do
+			ownerlist:AddChoice( v:Nick(), v )
+		end
+		function ownerlist:OnSelect( index, value, data )
+			net.Start( "OwnDoor" )
+			net.WriteEntity( door )
+			net.WriteEntity( data )
+			net.WriteBool( true )
+			net.SendToServer()
+			menu:Close()
+			OpenDoorConfig( ply, door )
+		end
+	end
+	local sellbutton = vgui.Create( "DButton", menu )
+	sellbutton:SetText( "Remove Door Ownership" )
+	sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	sellbutton:SetPos( 30, 150 )
+	sellbutton:SetSize( 150, 30 )
+	sellbutton:CenterHorizontal()
+	sellbutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	sellbutton.DoClick = function()
+		
 	end
 	ply.MenuOpen = true
 end
@@ -105,10 +145,38 @@ OpenDoorMenuAdmin = function( ply, door )
 			menu:Close()
 		end
 	end
+	local ownerbutton = vgui.Create( "DButton", menu )
+	ownerbutton:SetText( "Add Co-Owner" )
+	ownerbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	ownerbutton:SetPos( 30, 70 )
+	ownerbutton:SetSize( 150, 30 )
+	ownerbutton:CenterHorizontal()
+	ownerbutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	ownerbutton.DoClick = function()
+		local ownerlist = vgui.Create( "DComboBox", menu )
+		ownerlist:SetPos( 30, 70 )
+		ownerlist:SetSize( 100, 20 )
+		ownerlist:CenterHorizontal()
+		ownerlist:SetValue( "Select Player" )
+		for k,v in pairs( player.GetAll() ) do
+			if door.CoOwnerTable and table.HasValue( door.CoOwnerTable, v ) then return end
+			ownerlist:AddChoice( v:Nick(), v )
+		end
+		function ownerlist:OnSelect( index, value, data )
+			if !door.CoOwnerTable then
+				door.CoOwnerTable = {}
+			end
+			table.insert( door.CoOwnerTable, data )
+			menu:Close()
+			OpenDoorMenuAdmin( ply, door )
+		end
+	end
 	local configbutton = vgui.Create( "DButton", menu )
 	configbutton:SetText( "Admin Door Config" )
 	configbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	configbutton:SetPos( 30, 70 )
+	configbutton:SetPos( 30, 110 )
 	configbutton:SetSize( 150, 30 )
 	configbutton:CenterHorizontal()
 	configbutton.Paint = function( self, w, h )
@@ -169,6 +237,18 @@ local function OpenDoorMenu( ply, door )
 	ply.MenuOpen = true
 end
 
+local function GetCoOwners( ent )
+	local owners = ""
+	for k,v in ipairs( ent.CoOwnerTable ) do
+		if k == 1 then
+			owners = v:Nick()
+		else
+			owners = owners..", "..v:Nick()
+		end
+	end
+	return owners
+end
+
 hook.Add( "HUDPaint", "DoorHUD", function()
 	local ply = LocalPlayer()
 	local ent = ply:GetEyeTrace().Entity
@@ -177,11 +257,16 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 	if ply.MenuOpen then return end
 	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
 		if IsValid( doorowner ) then
-			draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+			draw.SimpleText( "Owners: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2 - 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		else
-			draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+			draw.SimpleText( "Owners: None", "DoorFont", ScrW() / 2, ScrH() / 2 - 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
-		draw.SimpleText( "Press F2 for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		draw.SimpleText( "Press F2 for door options.", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		if ent.CoOwnerTable and !table.IsEmpty( ent.CoOwnerTable ) then
+			draw.SimpleText( "Pending Co-Ownerships: "..GetCoOwners( ent ), "DoorFont", ScrW() / 2 + 20, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		else
+			draw.SimpleText( "Pending Co-Ownerships: None", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		end
 	end
 end )
 
