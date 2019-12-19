@@ -39,7 +39,7 @@ local allowed = {
 local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 
 local function KeySound( ply, lock )
-	ply:EmitSound( "npc/metropolice/gear"..math.random( 1, 7 )..".wav" )
+	ply:EmitSound( "npc/metropolice/gear"..math.random( 1, 6 )..".wav" )
 	timer.Simple( 1, function()
 		if lock then
 			ply:EmitSound( "doors/door_latch1.wav" )
@@ -54,14 +54,21 @@ function SWEP:PrimaryAttack()
 	local tr = self.Owner:GetEyeTrace().Entity
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
-    if allowed[tr:GetClass()] and CLIENT then
-		if doorowner == self.Owner or ( tr.CoOwnerTable and table.HasValue( tr.CoOwnerTable, self ) ) then
+    if allowed[tr:GetClass()] then
+		if doorowner == self.Owner then
 			if SERVER then
 				tr:Fire( "lock", "", 0 )
 				KeySound( self.Owner, true )
 			end
 		else
-			self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" )
+			if self.Owner:CanUseDoor( tr:EntIndex() ) then
+				if SERVER then
+					tr:Fire( "lock", "", 0 )
+					KeySound( self.Owner, true )
+				end
+			else
+				if SERVER then self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" ) end
+			end
 		end
 	end
     self:SetNextPrimaryFire( CurTime() + 0.1 )
@@ -69,16 +76,25 @@ end
 
 function SWEP:SecondaryAttack()
 	if !IsFirstTimePredicted() then return end
-    local tr = self.Owner:GetEyeTrace().Entity
+	local tr = self.Owner:GetEyeTrace().Entity
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
     if allowed[tr:GetClass()] then
 		if doorowner == self.Owner then
-			tr:Fire( "unlock", "", 0 )
-			KeySound( self.Owner, false )
+			if SERVER then
+				tr:Fire( "unlock", "", 0 )
+				KeySound( self.Owner, false )
+			end
 		else
-			self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" )
+			if self.Owner:CanUseDoor( tr:EntIndex() ) then
+				if SERVER then
+					tr:Fire( "unlock", "", 0 )
+					KeySound( self.Owner, false )
+				end
+			else
+				if SERVER then self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" ) end
+			end
 		end
 	end
-    self:SetNextSecondaryFire( CurTime() + 0.1 )
+    self:SetNextPrimaryFire( CurTime() + 0.1 )
 end
