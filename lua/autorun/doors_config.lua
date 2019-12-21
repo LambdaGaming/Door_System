@@ -1,13 +1,11 @@
 
---[[
-	Current Features:
-	1. Simple door ownership through F2 menu
-	2. Admin settings through F2 menu
-	3. Support for restrictive ownership such as police only
-	4. Support for saving ownership settings in json files for each map
-]]
+DoorRestrictions = {} --Initializes the door restrictions table, don't touch
 
-DoorRestrictions = {}
+--[[
+	Below are the configs for the door restrictions. Each table includes
+	the name of the restriction and a boolean function to check if the player
+	meets the requirements to lock/unlock the door.
+]]
 
 DoorRestrictions[1] = {
 	Name = "Admin Only",
@@ -23,7 +21,7 @@ DoorRestrictions[2] = {
 	end
 }
 
-DoorRestrictions[3] = {
+--[[ DoorRestrictions[3] = { --Example for DarkRP jobs
 	Name = "Police Only",
 	CheckFunction = function( ply )
 		local allowed = {
@@ -33,7 +31,7 @@ DoorRestrictions[3] = {
 		}
 		return allowed[ply:Team()]
 	end
-}
+} ]]
 
 DOOR_CONFIG_MENU_COLOR = Color( 49, 53, 61, 200 ) --Color of the menu background
 
