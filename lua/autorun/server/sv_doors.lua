@@ -22,9 +22,9 @@ end
 
 hook.Add( "InitPostEntity", "UpdateDoorTable", function()
 	if !file.Exists( doorfile, "DATA" ) then
+		file.CreateDir( "doorsystem" )
 		file.Write( doorfile, "{}" )
 	end
-	LoadDoorTable()
 end )
 
 function AddDoorRestriction( index, id )

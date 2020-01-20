@@ -288,10 +288,10 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 end )
 
 hook.Add( "PlayerButtonDown", "DoorButtons", function( ply, button )
-	local f2 = KEY_F2
+	local doorkey = KEY_F9
 	local ent = ply:GetEyeTrace().Entity
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
-	if IsValid( ent ) and button == f2 and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
+	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
 		if DoorTable[ent:EntIndex()] then
 			if ply:IsSuperAdmin() or ( ply:IsAdmin() and DOOR_CONFIG_ALLOW_ADMIN ) then
 				OpenDoorConfigRestricted( ply, ent )
