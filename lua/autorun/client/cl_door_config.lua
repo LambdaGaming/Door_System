@@ -2,19 +2,10 @@
 CreateClientConVar( "DoorKey", KEY_F9, true, false, "Key that you press to access the menu of a door." )
 
 hook.Add( "PopulateToolMenu", "DoorConfig", function()
-	spawnmenu.AddToolMenuOption( "Options", "Door System", "DoorSystem", "Config", "", "", function( panel )
-        local funcchoice = panel:ComboBox( "Menu Key", "DoorKey" )
-	    funcchoice:AddChoice( "F1", KEY_F1 )
-        funcchoice:AddChoice( "F2", KEY_F2 )
-        funcchoice:AddChoice( "F3", KEY_F3 )
-        funcchoice:AddChoice( "F4", KEY_F4 )
-        funcchoice:AddChoice( "F5", KEY_F5 )
-        funcchoice:AddChoice( "F6", KEY_F6 )
-        funcchoice:AddChoice( "F7", KEY_F7 )
-        funcchoice:AddChoice( "F8", KEY_F8 )
-        funcchoice:AddChoice( "F9", KEY_F9, true )
-        funcchoice:AddChoice( "F10", KEY_F10 )
-        funcchoice:AddChoice( "F11", KEY_F11 )
-        funcchoice:AddChoice( "F12", KEY_F12 )
+    spawnmenu.AddToolMenuOption( "Options", "Door System", "DoorSystem", "Config", "", "", function( panel )
+		panel:AddControl( "Numpad", {
+			Label = "Door Menu Key",
+			Command = "DoorKey"
+		} )
 	end )
 end )

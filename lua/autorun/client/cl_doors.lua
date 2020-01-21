@@ -266,29 +266,6 @@ local function GetDoorRestrictions( index )
 	return DoorRestrictions[DoorTable[index]].Name
 end
 
-local keynames = {
-	{ KEY_F1, "F1" },
-	{ KEY_F2, "F2" },
-	{ KEY_F3, "F3" },
-	{ KEY_F4, "F4" },
-	{ KEY_F5, "F5" },
-	{ KEY_F6, "F6" },
-	{ KEY_F7, "F7" },
-	{ KEY_F8, "F8" },
-	{ KEY_F9, "F9" },
-	{ KEY_F10, "F10" },
-	{ KEY_F11, "F11" },
-	{ KEY_F12, "F12" }
-}
-
-local function GetKeyName( key )
-	for k,v in pairs( keynames ) do
-		if key == v[1] then
-			return v[2]
-		end
-	end
-end
-
 hook.Add( "HUDPaint", "DoorHUD", function()
 	local ply = LocalPlayer()
 	local ent = ply:GetEyeTrace().Entity
@@ -306,7 +283,7 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 				draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 			end
 		end
-		draw.SimpleText( "Press "..GetKeyName( GetConVar( "DoorKey" ):GetInt() ).." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		draw.SimpleText( "Press "..language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) ).." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 	end
 end )
 

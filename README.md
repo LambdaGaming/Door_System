@@ -3,7 +3,7 @@ Simple door ownership system that works on any gamemode.
 
 ## Current Features:
 <ul>
-	<li>Own doors by looking at them and pressing F9. (Can now be customized through the spawn menu to any function key.)</li>
+	<li>Own doors by looking at them and pressing F9. (Can now be customized through the spawn menu to any key.)</li>
 	<li>Owned doors can be locked and unlocked with the keys.</li>
 	<li>Locked doors can be forced open with the door ram.</li>
 	<li>Admins can access a config in the door's menu to force an owner on that specific door.</li>
