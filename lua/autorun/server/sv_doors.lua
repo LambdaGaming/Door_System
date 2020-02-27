@@ -10,6 +10,13 @@ hook.Add( "PlayerInitialSpawn", "UpdateDoorTableClient", function( ply )
 	net.Send( ply )
 end )
 
+util.AddNetworkString( "DS_Notify" )
+function DS_Notify( ply, text )
+	net.Start( "DS_Notify" )
+	net.WriteString( text )
+	net.Send( ply )
+end
+
 function LoadDoorTable() --Not used normally, used as a dev function if the table is reset after reloading the sh_doors.lua file
 	local readtable = util.JSONToTable( file.Read( doorfile ) )
 	DoorTable = readtable
@@ -43,20 +50,36 @@ net.Receive( "OwnDoor", function( len, ply )
 	local remoteply = net.ReadEntity()
 	local override = net.ReadBool()
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
+	local entindex = ent:EntIndex()
 	if override then
 		ent:SetNWEntity( "DoorOwner", remoteply )
-		ply:ChatPrint( "Door ownership override successful." )
+		DS_Notify( ply, "Door ownership override successful." )
 		return
 	end
 	if IsValid( doorowner ) then
 		if doorowner != ply then
-			ply:ChatPrint( "This door is already owned by someone else." )
+			DS_Notify( ply, "This door is already owned by someone else." )
 		else
-			ply:ChatPrint( "You already own this door." )
+			DS_Notify( ply, "You already own this door." )
 		end
 	else
 		ent:SetNWEntity( "DoorOwner", ply )
-		ply:ChatPrint( "You now own this door." )
+		DS_Notify( ply, "You now own this door." )
+		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+			for k,v in pairs( doorgroup.ChildDoors ) do
+				local childdoor = ents.GetByIndex( v )
+				if IsValid( childdoor ) then
+					if IsValid( childdoor:GetNWEntity( "DoorOwner" ) ) then
+						if DOOR_CONFIG_GROUP_OVERRIDE then
+							childdoor:SetNWEntity( "DoorOwner", ply )
+						end
+					else
+						childdoor:SetNWEntity( "DoorOwner", ply )
+					end
+				end
+			end
+			DS_Notify( ply, "You also now own all of the doors in the "..doorgroup.Name.." door group." )
+		end
 	end
 end )
 
@@ -65,32 +88,54 @@ net.Receive( "UnownDoor", function( len, ply )
 	local ent = net.ReadEntity()
 	local override = net.ReadBool()
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
+	local entindex = ent:EntIndex()
 	if override then
 		ent:SetNWEntity( "DoorOwner", NULL )
 		ent:Fire( "unlock", "", 0 )
-		ply:ChatPrint( "Door ownership override successful." )
+		DS_Notify( ply, "Door ownership override successful." )
 		return
 	end
 	if IsValid( doorowner ) then
 		if doorowner == ply then
 			ent:SetNWEntity( "DoorOwner", NULL )
+			ent:SetNWString( "DoorName", "" )
 			ent:Fire( "unlock", "", 0 )
-			ply:ChatPrint( "You have sold this door." )
+			DS_Notify( ply, "You have sold this door." )
+			if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+				for k,v in pairs( doorgroup.ChildDoors ) do
+					local childdoor = ents.GetByIndex( v )
+					if IsValid( childdoor ) then
+						local owner = childdoor:GetNWEntity( "DoorOwner" )
+						if IsValid( owner ) and owner == ply then
+							childdoor:SetNWEntity( "DoorOwner", NULL )
+							childdoor:SetNWString( "DoorName", "" )
+						end
+					end
+				end
+				DS_Notify( ply, "You have also sold all of the doors in the "..doorgroup.Name.." door group." )
+			end
 		else
-			ply:ChatPrint( "You do not own this door." )
+			DS_Notify( ply, "You do not own this door." )
 		end
 	end
 end )
 
 util.AddNetworkString( "SyncDoorTable" )
-net.Receive( "SyncDoorTable", function( len, ply )
+net.Receive( "SyncDoorTable", function()
 	local entindex = tonumber( net.ReadString() )
 	local data = tonumber( net.ReadString() )
 	AddDoorRestriction( entindex, data )
 end )
 
 util.AddNetworkString( "SyncDoorTableRemove" )
-net.Receive( "SyncDoorTableRemove", function( len, ply )
+net.Receive( "SyncDoorTableRemove", function()
 	local entindex = tonumber( net.ReadString() )
 	RemoveDoorRestriction( entindex )
+end )
+
+util.AddNetworkString( "SetDoorName" )
+net.Receive( "SetDoorName", function()
+	local ent = net.ReadEntity()
+	local name = net.ReadString()
+	ent:SetNWString( "DoorName", name )
 end )

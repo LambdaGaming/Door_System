@@ -18,6 +18,46 @@ local OpenDoorMenuAdmin
 local OpenDoorConfigRestricted
 local OpenDoorConfig
 
+local function DS_Notify( ply, text )
+	local textcolor1 = color_black
+	local textcolor2 = color_white
+	chat.AddText( textcolor1, "[Door System]: ", textcolor2, text )
+end
+net.Receive( "DS_Notify", function( len, ply )
+	local text = net.ReadString()
+	DS_Notify( ply, text )
+end )
+
+local function SetDoorName( ply, door )
+	local owner = door:GetNWEntity( "DoorOwner" )
+	if owner != ply then
+		DS_Notify( ply, "You do not own this door." )
+		return
+	end
+	local frame = vgui.Create( "DFrame" )
+	frame:SetTitle( "Set Door Name" )
+	frame:SetSize( 180, 70 )
+	frame:Center()
+	frame:MakePopup()
+	frame.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, ColorAlpha( DOOR_CONFIG_MENU_COLOR, 255 ) )
+	end
+	frame.OnClose = function()
+		ply.NameMenuOpen = false
+	end
+	local getname = vgui.Create( "DTextEntry", frame )
+	getname:SetSize( 170, 20 )
+	getname:SetPos( 5, 35 )
+	getname.OnEnter = function( self )
+		net.Start( "SetDoorName" )
+		net.WriteEntity( door )
+		net.WriteString( self:GetValue() )
+		net.SendToServer()
+		frame:Close()
+		ply.NameMenuOpen = false
+	end
+end
+
 OpenDoorConfig = function( ply, door )
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Admin Config" )
@@ -156,7 +196,7 @@ end
 OpenDoorMenuAdmin = function( ply, door )
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
-	menu:SetSize( 180, 120 )
+	menu:SetSize( 180, 150 )
 	menu:Center()
 	menu:MakePopup()
 	menu.Paint = function( self, w, h )
@@ -211,13 +251,27 @@ OpenDoorMenuAdmin = function( ply, door )
 		menu:Close()
 		OpenDoorConfig( ply, door )
 	end
+	local namebutton = vgui.Create( "DButton", menu )
+	namebutton:SetText( "Set Door Name" )
+	namebutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	namebutton:SetPos( 30, 110 )
+	namebutton:SetSize( 150, 30 )
+	namebutton:CenterHorizontal()
+	namebutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	namebutton.DoClick = function()
+		if ply.NameMenuOpen then return end
+		SetDoorName( ply, door )
+		ply.NameMenuOpen = true
+	end
 	ply.MenuOpen = true
 end
 
 local function OpenDoorMenu( ply, door )
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
-	menu:SetSize( 180, 80 )
+	menu:SetSize( 180, 110 )
 	menu:Center()
 	menu:MakePopup()
 	menu.Paint = function( self, w, h )
@@ -259,6 +313,20 @@ local function OpenDoorMenu( ply, door )
 			menu:Close()
 		end
 	end
+	local namebutton = vgui.Create( "DButton", menu )
+	namebutton:SetText( "Set Door Name" )
+	namebutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	namebutton:SetPos( 30, 70 )
+	namebutton:SetSize( 150, 30 )
+	namebutton:CenterHorizontal()
+	namebutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	namebutton.DoClick = function()
+		if ply.NameMenuOpen then return end
+		SetDoorName( ply, door )
+		ply.NameMenuOpen = true
+	end
 	ply.MenuOpen = true
 end
 
@@ -266,14 +334,19 @@ local function GetDoorRestrictions( index )
 	return DoorRestrictions[DoorTable[index]].Name
 end
 
+local color_red = DOOR_CONFIG_TEXT_COLOR
 hook.Add( "HUDPaint", "DoorHUD", function()
 	local ply = LocalPlayer()
 	local ent = ply:GetEyeTrace().Entity
-	local color_red = Color( 255, 0, 0 )
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
+	local doorname = ent:GetNWString( "DoorName" )
 	local entindex = ent:EntIndex()
+	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
 	if ply.MenuOpen then return end
 	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
+		if doorname != "" then
+			draw.SimpleText( doorname, "DoorFont", ScrW() / 2, ScrH() / 2 - 20, DOOR_CONFIG_NAME_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		end
 		if IsValid( doorowner ) then
 			draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		else
@@ -283,7 +356,10 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 				draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 			end
 		end
-		draw.SimpleText( "Press "..language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) ).." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		draw.SimpleText( "Press "..keyname.." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+			draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		end
 	end
 end )
 

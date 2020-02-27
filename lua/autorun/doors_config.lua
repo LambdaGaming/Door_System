@@ -1,5 +1,6 @@
 
 DoorRestrictions = {} --Initializes the door restrictions table, don't touch
+DoorGroups = {}
 
 --[[
 	Below are the configs for the door restrictions. Each table includes
@@ -29,13 +30,39 @@ DoorRestrictions[2] = {
 			[TEAM_CHIEF] = true,
 			[TEAM_POLICE] = true
 		}
-		return allowed[ply:Team()]
+		return allowed[ply:Team()] --You can also use table.HasValue but this is more efficient
 	end
 } ]]
 
+
+--[[
+	Below are the configs for the door groups. With these you can
+	tie doors together so that if a player buys one door, they will have
+	access to a group of doors that are tied to the main door.
+]]
+
+--[[ DoorGroups["rp_rockford_v2b"] = { --Example group config
+	[1022] = { --Parent door's entity index
+		Name = "City Hall", --Name that appears on the door
+		ChildDoors = { --Entity indexes of each child door
+			1023,
+			1024,
+			1025
+		}
+	}
+} ]]
+
+--Misc Config
+
+DOOR_CONFIG_GROUP_OVERRIDE = false --Whether a door that's part of a group should have it's owner overridden or not when buying the parent door
+
 DOOR_CONFIG_MENU_COLOR = Color( 49, 53, 61, 200 ) --Color of the menu background
 
-DOOR_CONFIG_BUTTON_COLOR = Color( 230, 93, 80, 255 ) --Color of the buttoms
+DOOR_CONFIG_BUTTON_COLOR = Color( 230, 93, 80, 255 ) --Color of the buttons
+
+DOOR_CONFIG_NAME_COLOR = color_black --Color of the door name on the HUD
+
+DOOR_CONFIG_TEXT_COLOR = Color( 255, 0, 0 ) --Color of the rest of the door info on the HUD
 
 DOOR_CONFIG_BUTTON_TEXT_COLOR = color_white --Color of the text on the buttons
 
