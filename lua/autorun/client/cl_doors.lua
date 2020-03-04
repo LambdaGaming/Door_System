@@ -42,9 +42,6 @@ local function SetDoorName( ply, door )
 	frame.Paint = function( self, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, ColorAlpha( DOOR_CONFIG_MENU_COLOR, 255 ) )
 	end
-	frame.OnClose = function()
-		ply.NameMenuOpen = false
-	end
 	local getname = vgui.Create( "DTextEntry", frame )
 	getname:SetSize( 170, 20 )
 	getname:SetPos( 5, 35 )
@@ -54,7 +51,6 @@ local function SetDoorName( ply, door )
 		net.WriteString( self:GetValue() )
 		net.SendToServer()
 		frame:Close()
-		ply.NameMenuOpen = false
 	end
 end
 
@@ -261,9 +257,7 @@ OpenDoorMenuAdmin = function( ply, door )
 		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
 	end
 	namebutton.DoClick = function()
-		if ply.NameMenuOpen then return end
 		SetDoorName( ply, door )
-		ply.NameMenuOpen = true
 	end
 	ply.MenuOpen = true
 end
@@ -323,9 +317,7 @@ local function OpenDoorMenu( ply, door )
 		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
 	end
 	namebutton.DoClick = function()
-		if ply.NameMenuOpen then return end
 		SetDoorName( ply, door )
-		ply.NameMenuOpen = true
 	end
 	ply.MenuOpen = true
 end

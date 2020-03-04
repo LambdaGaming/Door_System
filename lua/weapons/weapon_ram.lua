@@ -44,10 +44,16 @@ local function ForceOpen( ply, door )
 end
 
 function SWEP:PrimaryAttack()
-	if !IsFirstTimePredicted() then return end
+	if !IsFirstTimePredicted() or CLIENT then return end
 	local tr = self.Owner:GetEyeTrace().Entity
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
+	if DarkRP and IsValid( doorowner ) then
+		if DOOR_CONFIG_REQUIRE_WARRANT and !doorowner.warranted then
+			DarkRP.notify( self.Owner, 1, 6, "You need a warrant on the owner to force this door open." )
+			return
+		end
+	end
     if allowed[tr:GetClass()] and SERVER then
 		ForceOpen( self.Owner, tr )
 	end

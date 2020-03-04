@@ -63,9 +63,28 @@ net.Receive( "OwnDoor", function( len, ply )
 			DS_Notify( ply, "You already own this door." )
 		end
 	else
+		if DarkRP then
+			if DOOR_CONFIG_CHARGE_EXTRA and DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+				local doorgroup = DoorGroups[game.GetMap()][entindex]
+				local groupedprice = #doorgroup.ChildDoors * DOOR_CONFIG_PRICE
+				if ply:getDarkRPVar( "money" ) >= groupedprice then
+					ply:addMoney( -groupedprice )
+				else
+					DS_Notify( "You can't afford to buy these doors." )
+					return
+				end
+			end
+			if ply:getDarkRPVar( "money" ) >= DOOR_CONFIG_PRICE then
+				ply:addMoney( -DOOR_CONFIG_PRICE )
+			else
+				DS_Notify( "You can't afford to buy this door." )
+				return
+			end
+		end
 		ent:SetNWEntity( "DoorOwner", ply )
 		DS_Notify( ply, "You now own this door." )
 		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+			local doorgroup = DoorGroups[game.GetMap()][entindex]
 			for k,v in pairs( doorgroup.ChildDoors ) do
 				local childdoor = ents.GetByIndex( v )
 				if IsValid( childdoor ) then
@@ -102,6 +121,7 @@ net.Receive( "UnownDoor", function( len, ply )
 			ent:Fire( "unlock", "", 0 )
 			DS_Notify( ply, "You have sold this door." )
 			if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+				local doorgroup = DoorGroups[game.GetMap()][entindex]
 				for k,v in pairs( doorgroup.ChildDoors ) do
 					local childdoor = ents.GetByIndex( v )
 					if IsValid( childdoor ) then

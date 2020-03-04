@@ -54,6 +54,12 @@ DoorRestrictions[2] = {
 
 --Misc Config
 
+DOOR_CONFIG_PRICE = 30 --Price players pay for the doors (DarkRP only)
+
+DOOR_CONFIG_CHARGE_EXTRA = false --Whether or not players should be charged for each door in a group (DarkRP only)
+
+DOOR_CONFIG_REQUIRE_WARRANT = true --Whether or not cops need a warrant to force open doors with the battering ram (DarkRP only)
+
 DOOR_CONFIG_GROUP_OVERRIDE = false --Whether a door that's part of a group should have it's owner overridden or not when buying the parent door
 
 DOOR_CONFIG_MENU_COLOR = Color( 49, 53, 61, 200 ) --Color of the menu background
