@@ -1,5 +1,4 @@
 
-
 local doorfile = "doorsystem/"..game.GetMap()..".json"
 
 util.AddNetworkString( "SyncDoorTableClient" )
@@ -12,18 +11,24 @@ end )
 
 util.AddNetworkString( "DS_Notify" )
 function DS_Notify( ply, text )
+	if DarkRP then
+		DarkRP.notify( ply, 0, 6, text )
+		return
+	end
 	net.Start( "DS_Notify" )
 	net.WriteString( text )
 	net.Send( ply )
 end
 
-function LoadDoorTable() --Not used normally, used as a dev function if the table is reset after reloading the sh_doors.lua file
+function LoadDoorTable( sync )
 	local readtable = util.JSONToTable( file.Read( doorfile ) )
 	DoorTable = readtable
-	for k,v in pairs( player.GetAll() ) do
-		net.Start( "SyncDoorTableClient" )
-		net.WriteTable( readtable )
-		net.Send( v )
+	if sync then
+		for k,v in pairs( player.GetAll() ) do
+			net.Start( "SyncDoorTableClient" )
+			net.WriteTable( readtable )
+			net.Send( v )
+		end
 	end
 end
 
@@ -32,6 +37,19 @@ hook.Add( "InitPostEntity", "UpdateDoorTable", function()
 		file.CreateDir( "doorsystem" )
 		file.Write( doorfile, "{}" )
 	end
+
+	LoadDoorTable()
+
+	for k,v in pairs( ents.FindByClass( "prop_door*" ) ) do
+		if DoorTable.Lock[v:EntIndex()] then
+			v:Fire( "Lock" )
+		end
+	end
+	for k,v in pairs( ents.FindByClass( "func_door*" ) ) do --Using 2 for loops here since it's still faster than using ents.GetAll
+		if DoorTable.Lock[v:EntIndex()] then
+			v:Fire( "Lock" )
+		end
+	end
 end )
 
 function AddDoorRestriction( index, id )
@@ -39,8 +57,18 @@ function AddDoorRestriction( index, id )
 	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
 end
 
+function AddDoorLock( index )
+	DoorTable.Lock[index] = true
+	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
+end
+
 function RemoveDoorRestriction( index )
 	DoorTable[index] = nil
+	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
+end
+
+function RemoveDoorLock( index )
+	DoorTable.Lock[index] = nil
 	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
 end
 
@@ -54,6 +82,10 @@ net.Receive( "OwnDoor", function( len, ply )
 	if override then
 		ent:SetNWEntity( "DoorOwner", remoteply )
 		DS_Notify( ply, "Door ownership override successful." )
+		return
+	end
+	if DoorTable[entindex] then
+		DS_Notify( ply, "This door is managed by a group and cannot be owned." )
 		return
 	end
 	if IsValid( doorowner ) then
@@ -142,15 +174,31 @@ end )
 
 util.AddNetworkString( "SyncDoorTable" )
 net.Receive( "SyncDoorTable", function()
-	local entindex = tonumber( net.ReadString() )
-	local data = tonumber( net.ReadString() )
+	local entindex = net.ReadInt( 32 )
+	local data = net.ReadInt( 32 )
 	AddDoorRestriction( entindex, data )
+end )
+
+util.AddNetworkString( "SyncLockTable" )
+net.Receive( "SyncLockTable", function()
+	local entindex = net.ReadInt( 32 )
+	local ent = ents.GetByIndex( entindex )
+	AddDoorLock( entindex )
+	ent:Fire( "Lock" )
 end )
 
 util.AddNetworkString( "SyncDoorTableRemove" )
 net.Receive( "SyncDoorTableRemove", function()
-	local entindex = tonumber( net.ReadString() )
+	local entindex = net.ReadInt( 32 )
 	RemoveDoorRestriction( entindex )
+end )
+
+util.AddNetworkString( "SyncLockTableRemove" )
+net.Receive( "SyncLockTableRemove", function()
+	local entindex = net.ReadInt( 32 )
+	local ent = ents.GetByIndex( entindex )
+	RemoveDoorLock( entindex )
+	ent:Fire( "Unlock" )
 end )
 
 util.AddNetworkString( "SetDoorName" )
@@ -158,4 +206,11 @@ net.Receive( "SetDoorName", function()
 	local ent = net.ReadEntity()
 	local name = net.ReadString()
 	ent:SetNWString( "DoorName", name )
+end )
+
+util.AddNetworkString( "DarkRPDoorChat" )
+net.Receive( "DarkRPDoorChat", function()
+	local ply = net.ReadEntity()
+	local text = net.ReadString()
+	DarkRP.notify( ply, 0, 6, text )
 end )

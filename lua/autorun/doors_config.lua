@@ -60,7 +60,7 @@ DOOR_CONFIG_CHARGE_EXTRA = false --Whether or not players should be charged for 
 
 DOOR_CONFIG_REQUIRE_WARRANT = true --Whether or not cops need a warrant to force open doors with the battering ram (DarkRP only)
 
-DOOR_CONFIG_GROUP_OVERRIDE = false --Whether a door that's part of a group should have it's owner overridden or not when buying the parent door
+DOOR_CONFIG_GROUP_OVERRIDE = false --Whether or not a door that's part of a group should have it's owner overridden when buying the parent door
 
 DOOR_CONFIG_MENU_COLOR = Color( 49, 53, 61, 200 ) --Color of the menu background
 
@@ -74,4 +74,4 @@ DOOR_CONFIG_BUTTON_TEXT_COLOR = color_white --Color of the text on the buttons
 
 DOOR_CONFIG_DISTANCE = 100 --Max distance in hammer units away from a door where players can interact with it
 
-DOOR_CONFIG_ALLOW_ADMIN = false --Whether admins should be able to edit door ownerships alongside superadmins or not
+DOOR_CONFIG_ALLOW_ADMIN = false --Whether or not admins should be able to edit door ownerships alongside superadmins

@@ -14,11 +14,14 @@ local allowed = {
 
 local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 
-local OpenDoorMenuAdmin
-local OpenDoorConfigRestricted
-local OpenDoorConfig
-
 local function DS_Notify( ply, text )
+	if DarkRP then
+		net.Start( "DarkRPDoorChat" )
+		net.WriteEntity( ply )
+		net.WriteString( text )
+		net.SendToServer()
+		return
+	end
 	local textcolor1 = color_black
 	local textcolor2 = color_white
 	chat.AddText( textcolor1, "[Door System]: ", textcolor2, text )
@@ -54,145 +57,11 @@ local function SetDoorName( ply, door )
 	end
 end
 
-OpenDoorConfig = function( ply, door )
-	local menu = vgui.Create( "DFrame" )
-	menu:SetTitle( "Admin Config" )
-	menu:SetSize( 180, 150 )
-	menu:Center()
-	menu:MakePopup()
-	menu.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_MENU_COLOR )
-	end
-	menu.OnClose = function()
-		ply.MenuOpen = false
-	end
-	local backbutton = vgui.Create( "DButton", menu )
-	backbutton:SetText( "Back" )
-	backbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	backbutton:SetPos( 30, 30 )
-	backbutton:SetSize( 150, 30 )
-	backbutton:CenterHorizontal()
-	backbutton.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-	end
-	backbutton.DoClick = function()
-		menu:Close()
-		OpenDoorMenuAdmin( ply, door )
-	end
-	local sellbutton = vgui.Create( "DButton", menu )
-	sellbutton:SetText( "Remove Door Ownership" )
-	sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	sellbutton:SetPos( 30, 70 )
-	sellbutton:SetSize( 150, 30 )
-	sellbutton:CenterHorizontal()
-	sellbutton.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-	end
-	sellbutton.DoClick = function()
-		net.Start( "UnownDoor" )
-		net.WriteEntity( door )
-		net.WriteBool( true )
-		net.SendToServer()
-		menu:Close()
-	end
-	local restrictbutton = vgui.Create( "DButton", menu )
-	restrictbutton:SetText( "Add Restriction" )
-	restrictbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	restrictbutton:SetPos( 30, 110 )
-	restrictbutton:SetSize( 150, 30 )
-	restrictbutton:CenterHorizontal()
-	restrictbutton.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-	end
-	restrictbutton.DoClick = function()
-		local joblist = vgui.Create( "DComboBox", menu )
-		joblist:SetPos( 30, 110 )
-		joblist:SetSize( 100, 20 )
-		joblist:CenterHorizontal()
-		joblist:SetValue( "Select Restriction" )
-		for k,v in pairs( DoorRestrictions ) do
-			joblist:AddChoice( v.Name, k )
-		end
-		function joblist:OnSelect( index, value, data )
-			local entindex = door:EntIndex()
-			DoorTable[entindex] = data
-			net.Start( "SyncDoorTable" )
-			net.WriteString( tostring( entindex ) )
-			net.WriteString( tostring( data ) )
-			net.SendToServer()
-			menu:Close()
-			OpenDoorConfigRestricted( ply, door )
-		end
-	end
-	ply.MenuOpen = true
-end
-
-OpenDoorConfigRestricted = function( ply, door )
-	local menu = vgui.Create( "DFrame" )
-	menu:SetTitle( "Admin Config" )
-	menu:SetSize( 180, 120 )
-	menu:Center()
-	menu:MakePopup()
-	menu.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_MENU_COLOR )
-	end
-	menu.OnClose = function()
-		ply.MenuOpen = false
-	end
-	local restrictbutton = vgui.Create( "DButton", menu )
-	restrictbutton:SetText( "Change Restriction" )
-	restrictbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	restrictbutton:SetPos( 30, 30 )
-	restrictbutton:SetSize( 150, 30 )
-	restrictbutton:CenterHorizontal()
-	restrictbutton.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-	end
-	restrictbutton.DoClick = function()
-		local joblist = vgui.Create( "DComboBox", menu )
-		joblist:SetPos( 30, 30 )
-		joblist:SetSize( 100, 20 )
-		joblist:CenterHorizontal()
-		joblist:SetValue( "Select Player" )
-		for k,v in pairs( DoorRestrictions ) do
-			joblist:AddChoice( v.Name, k )
-		end
-		function joblist:OnSelect( index, value, data )
-			local entindex = door:EntIndex()
-			DoorTable[entindex] = data
-			net.Start( "SyncDoorTable" )
-			net.WriteString( tostring( entindex ) )
-			net.WriteString( tostring( data ) )
-			net.SendToServer()
-			menu:Close()
-			OpenDoorConfigRestricted( ply, door )
-		end
-	end
-	local restrictremove = vgui.Create( "DButton", menu )
-	restrictremove:SetText( "Remove Restriction" )
-	restrictremove:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	restrictremove:SetPos( 30, 70 )
-	restrictremove:SetSize( 150, 30 )
-	restrictremove:CenterHorizontal()
-	restrictremove.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-	end
-	restrictremove.DoClick = function()
-		local entindex = door:EntIndex()
-		DoorTable[entindex] = nil
-		net.Start( "SyncDoorTableRemove" )
-		net.WriteString( tostring( entindex ) )
-		net.SendToServer()
-		menu:Close()
-		OpenDoorConfig( ply, door )
-	end
-	ply.MenuOpen = true
-end
-
-OpenDoorMenuAdmin = function( ply, door )
+local function OpenDoorMenuAdmin( ply, door )
+	local entindex = door:EntIndex()
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
-	menu:SetSize( 180, 150 )
+	menu:SetSize( 220, 290 )
 	menu:Center()
 	menu:MakePopup()
 	menu.Paint = function( self, w, h )
@@ -201,85 +70,13 @@ OpenDoorMenuAdmin = function( ply, door )
 	menu.OnClose = function()
 		ply.MenuOpen = false
 	end
+
 	if !IsValid( door:GetNWEntity( "DoorOwner" ) ) then
 		local buybutton = vgui.Create( "DButton", menu )
 		buybutton:SetText( "Own Door" )
 		buybutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
 		buybutton:SetPos( 30, 30 )
-		buybutton:SetSize( 150, 30 )
-		buybutton:CenterHorizontal()
-		buybutton.Paint = function( self, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-		end
-		buybutton.DoClick = function()
-			net.Start( "OwnDoor" )
-			net.WriteEntity( door )
-			net.SendToServer()
-			menu:Close()
-		end
-	else
-		local sellbutton = vgui.Create( "DButton", menu )
-		sellbutton:SetText( "Remove Door Ownership" )
-		sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-		sellbutton:SetPos( 30, 30 )
-		sellbutton:SetSize( 150, 30 )
-		sellbutton:CenterHorizontal()
-		sellbutton.Paint = function( self, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-		end
-		sellbutton.DoClick = function()
-			net.Start( "UnownDoor" )
-			net.WriteEntity( door )
-			net.SendToServer()
-			menu:Close()
-		end
-	end
-	local configbutton = vgui.Create( "DButton", menu )
-	configbutton:SetText( "Admin Door Config" )
-	configbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	configbutton:SetPos( 30, 70 )
-	configbutton:SetSize( 150, 30 )
-	configbutton:CenterHorizontal()
-	configbutton.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-	end
-	configbutton.DoClick = function()
-		menu:Close()
-		OpenDoorConfig( ply, door )
-	end
-	local namebutton = vgui.Create( "DButton", menu )
-	namebutton:SetText( "Set Door Name" )
-	namebutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	namebutton:SetPos( 30, 110 )
-	namebutton:SetSize( 150, 30 )
-	namebutton:CenterHorizontal()
-	namebutton.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-	end
-	namebutton.DoClick = function()
-		SetDoorName( ply, door )
-	end
-	ply.MenuOpen = true
-end
-
-local function OpenDoorMenu( ply, door )
-	local menu = vgui.Create( "DFrame" )
-	menu:SetTitle( "Door Settings" )
-	menu:SetSize( 180, 110 )
-	menu:Center()
-	menu:MakePopup()
-	menu.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_MENU_COLOR )
-	end
-	menu.OnClose = function()
-		ply.MenuOpen = false
-	end
-	if !IsValid( door:GetNWEntity( "DoorOwner" ) ) then
-		local buybutton = vgui.Create( "DButton", menu )
-		buybutton:SetText( "Own Door" )
-		buybutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-		buybutton:SetPos( 30, 30 )
-		buybutton:SetSize( 150, 30 )
+		buybutton:SetSize( 190, 30 )
 		buybutton:CenterHorizontal()
 		buybutton.Paint = function( self, w, h )
 			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
@@ -295,7 +92,7 @@ local function OpenDoorMenu( ply, door )
 		sellbutton:SetText( "Unown Door" )
 		sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
 		sellbutton:SetPos( 30, 30 )
-		sellbutton:SetSize( 150, 30 )
+		sellbutton:SetSize( 190, 30 )
 		sellbutton:CenterHorizontal()
 		sellbutton.Paint = function( self, w, h )
 			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
@@ -307,11 +104,191 @@ local function OpenDoorMenu( ply, door )
 			menu:Close()
 		end
 	end
+
 	local namebutton = vgui.Create( "DButton", menu )
 	namebutton:SetText( "Set Door Name" )
 	namebutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
 	namebutton:SetPos( 30, 70 )
-	namebutton:SetSize( 150, 30 )
+	namebutton:SetSize( 190, 30 )
+	namebutton:CenterHorizontal()
+	namebutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	namebutton.DoClick = function()
+		SetDoorName( ply, door )
+	end
+
+	local adminlabel = Label( "Admin Settings", menu )
+	adminlabel:SetSize( 190, 15 )
+	adminlabel:SetPos( 70, 110 )
+
+	local sellbutton = vgui.Create( "DButton", menu )
+	sellbutton:SetText( "Force Remove Ownership" )
+	sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	sellbutton:SetPos( 30, 130 )
+	sellbutton:SetSize( 190, 30 )
+	sellbutton:CenterHorizontal()
+	sellbutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	sellbutton.DoClick = function()
+		net.Start( "UnownDoor" )
+		net.WriteEntity( door )
+		net.WriteBool( true )
+		net.SendToServer()
+		menu:Close()
+	end
+
+	local restrictbutton = vgui.Create( "DButton", menu )
+	if DoorTable[entindex] then
+		restrictbutton:SetText( "Change Restriction" )
+	else
+		restrictbutton:SetText( "Add Restriction" )
+	end
+	restrictbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	restrictbutton:SetPos( 30, 170 )
+	restrictbutton:SetSize( 190, 30 )
+	restrictbutton:CenterHorizontal()
+	restrictbutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	restrictbutton.DoClick = function()
+		local joblist = vgui.Create( "DComboBox", menu )
+		joblist:SetPos( 30, 175 )
+		joblist:SetSize( 190, 20 )
+		joblist:CenterHorizontal()
+		joblist:SetValue( "Select Restriction" )
+		for k,v in pairs( DoorRestrictions ) do
+			joblist:AddChoice( v.Name, k )
+		end
+		function joblist:OnSelect( index, value, data )
+			DoorTable[entindex] = data
+			net.Start( "SyncDoorTable" )
+			net.WriteInt( entindex, 32 )
+			net.WriteInt( data, 32 )
+			net.SendToServer()
+			menu:Close()
+			OpenDoorMenuAdmin( ply, door )
+		end
+	end
+	
+	local restrictremove = vgui.Create( "DButton", menu )
+	restrictremove:SetText( "Remove Restriction" )
+	restrictremove:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	restrictremove:SetPos( 30, 210 )
+	restrictremove:SetSize( 190, 30 )
+	restrictremove:CenterHorizontal()
+	restrictremove.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	restrictremove.DoClick = function()
+		if !DoorTable[entindex] then
+			DS_Notify( ply, "This door doesn't have any restrictions to remove." )
+			return
+		end
+		DoorTable[entindex] = nil
+		net.Start( "SyncDoorTableRemove" )
+		net.WriteInt( entindex, 32 )
+		net.SendToServer()
+		menu:Close()
+		OpenDoorMenuAdmin( ply, door )
+		DS_Notify( ply, "Door restriction successfully removed." )
+	end
+
+	if DoorTable.Lock[entindex] then
+		local forcelock = vgui.Create( "DButton", menu )
+		forcelock:SetText( "Disable Force Lock" )
+		forcelock:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+		forcelock:SetPos( 30, 250 )
+		forcelock:SetSize( 190, 30 )
+		forcelock:CenterHorizontal()
+		forcelock.Paint = function( self, w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+		end
+		forcelock.DoClick = function()
+			DoorTable.Lock[entindex] = nil
+			net.Start( "SyncLockTableRemove" )
+			net.WriteInt( entindex, 32 )
+			net.SendToServer()
+			menu:Close()
+			OpenDoorMenuAdmin( ply, door )
+			DS_Notify( ply, "Door will no longer lock when the server loads." )
+		end
+	else
+		local forcelock = vgui.Create( "DButton", menu )
+		forcelock:SetText( "Force Lock Door" )
+		forcelock:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+		forcelock:SetPos( 30, 250 )
+		forcelock:SetSize( 190, 30 )
+		forcelock:CenterHorizontal()
+		forcelock.Paint = function( self, w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+		end
+		forcelock.DoClick = function()
+			DoorTable.Lock[entindex] = true
+			net.Start( "SyncLockTable" )
+			net.WriteInt( entindex, 32 )
+			net.SendToServer()
+			menu:Close()
+			OpenDoorMenuAdmin( ply, door )
+			DS_Notify( ply, "Door will now lock when the server loads." )
+		end
+	end
+	ply.MenuOpen = true
+end
+
+local function OpenDoorMenu( ply, door )
+	local menu = vgui.Create( "DFrame" )
+	menu:SetTitle( "Door Settings" )
+	menu:SetSize( 220, 110 )
+	menu:Center()
+	menu:MakePopup()
+	menu.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_MENU_COLOR )
+	end
+	menu.OnClose = function()
+		ply.MenuOpen = false
+	end
+
+	if !IsValid( door:GetNWEntity( "DoorOwner" ) ) then
+		local buybutton = vgui.Create( "DButton", menu )
+		buybutton:SetText( "Own Door" )
+		buybutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+		buybutton:SetPos( 30, 30 )
+		buybutton:SetSize( 190, 30 )
+		buybutton:CenterHorizontal()
+		buybutton.Paint = function( self, w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+		end
+		buybutton.DoClick = function()
+			net.Start( "OwnDoor" )
+			net.WriteEntity( door )
+			net.SendToServer()
+			menu:Close()
+		end
+	else
+		local sellbutton = vgui.Create( "DButton", menu )
+		sellbutton:SetText( "Unown Door" )
+		sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+		sellbutton:SetPos( 30, 30 )
+		sellbutton:SetSize( 190, 30 )
+		sellbutton:CenterHorizontal()
+		sellbutton.Paint = function( self, w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+		end
+		sellbutton.DoClick = function()
+			net.Start( "UnownDoor" )
+			net.WriteEntity( door )
+			net.SendToServer()
+			menu:Close()
+		end
+	end
+
+	local namebutton = vgui.Create( "DButton", menu )
+	namebutton:SetText( "Set Door Name" )
+	namebutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	namebutton:SetPos( 30, 70 )
+	namebutton:SetSize( 190, 30 )
 	namebutton:CenterHorizontal()
 	namebutton.Paint = function( self, w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
@@ -360,12 +337,6 @@ hook.Add( "PlayerButtonDown", "DoorButtons", function( ply, button )
 	local ent = ply:GetEyeTrace().Entity
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
 	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
-		if DoorTable[ent:EntIndex()] then
-			if ply:IsSuperAdmin() or ( ply:IsAdmin() and DOOR_CONFIG_ALLOW_ADMIN ) then
-				OpenDoorConfigRestricted( ply, ent )
-			end
-			return
-		end
 		if ply:IsSuperAdmin() or ( ply:IsAdmin() and DOOR_CONFIG_ALLOW_ADMIN ) then
 			OpenDoorMenuAdmin( ply, ent )
 		else

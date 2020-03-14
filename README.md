@@ -11,6 +11,7 @@ Simple door ownership system that works on any gamemode.
 	<li>Owner restrictions will save in a JSON file for each map.</li>
 	<li>Door owners can now set a custom name to their door that is visible to all players who look at the door.</li>
 	<li>Support for owning whole rooms or buildings without having to manually own each individual door. (Server owners have to set this up manually, this doesn't support any maps out of the box.)</li>
+	<li>Admins can force specific doors to lock when the map loads.</li>
 </ul>
 
 ## Note:
