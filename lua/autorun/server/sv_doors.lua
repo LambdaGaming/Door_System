@@ -72,6 +72,17 @@ function RemoveDoorLock( index )
 	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
 end
 
+function AddCoOwner( ply, index )
+	if !DoorCoOwners[index] then DoorCoOwners[index] = {} end
+	table.insert( DoorCoOwners[index], ply )
+end
+
+function RemoveCoOwner( ply, index )
+	if DoorCoOwners[index] then
+		table.RemoveByValue( DoorCoOwners[index], ply )
+	end
+end
+
 util.AddNetworkString( "OwnDoor" )
 net.Receive( "OwnDoor", function( len, ply )
 	local ent = net.ReadEntity()
@@ -99,14 +110,14 @@ net.Receive( "OwnDoor", function( len, ply )
 			if DOOR_CONFIG_CHARGE_EXTRA and DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 				local doorgroup = DoorGroups[game.GetMap()][entindex]
 				local groupedprice = #doorgroup.ChildDoors * DOOR_CONFIG_PRICE
-				if ply:getDarkRPVar( "money" ) >= groupedprice then
+				if ply:canAfford( groupedprice ) then
 					ply:addMoney( -groupedprice )
 				else
 					DS_Notify( "You can't afford to buy these doors." )
 					return
 				end
 			end
-			if ply:getDarkRPVar( "money" ) >= DOOR_CONFIG_PRICE then
+			if ply:canAfford( DOOR_CONFIG_PRICE ) then
 				ply:addMoney( -DOOR_CONFIG_PRICE )
 			else
 				DS_Notify( "You can't afford to buy this door." )
@@ -135,6 +146,7 @@ net.Receive( "OwnDoor", function( len, ply )
 end )
 
 util.AddNetworkString( "UnownDoor" )
+util.AddNetworkString( "SyncCoOwnerClient" )
 net.Receive( "UnownDoor", function( len, ply )
 	local ent = net.ReadEntity()
 	local override = net.ReadBool()
@@ -142,8 +154,13 @@ net.Receive( "UnownDoor", function( len, ply )
 	local entindex = ent:EntIndex()
 	if override then
 		ent:SetNWEntity( "DoorOwner", NULL )
+		ent:SetNWString( "DoorName", "" )
 		ent:Fire( "unlock", "", 0 )
 		DS_Notify( ply, "Door ownership override successful." )
+		DoorCoOwners[entindex] = nil
+		net.Start( "SyncCoOwnerClient" )
+		net.WriteTable( DoorCoOwners )
+		net.Broadcast()
 		return
 	end
 	if IsValid( doorowner ) then
@@ -166,6 +183,10 @@ net.Receive( "UnownDoor", function( len, ply )
 				end
 				DS_Notify( ply, "You have also sold all of the doors in the "..doorgroup.Name.." door group." )
 			end
+			DoorCoOwners[entindex] = nil
+			net.Start( "SyncCoOwnerClient" )
+			net.WriteTable( DoorCoOwners )
+			net.Broadcast()
 		else
 			DS_Notify( ply, "You do not own this door." )
 		end
@@ -174,31 +195,28 @@ end )
 
 util.AddNetworkString( "SyncDoorTable" )
 net.Receive( "SyncDoorTable", function()
-	local entindex = net.ReadInt( 32 )
+	local index = net.ReadInt( 32 )
 	local data = net.ReadInt( 32 )
-	AddDoorRestriction( entindex, data )
+	local remove = net.ReadBool()
+	if remove then
+		RemoveDoorRestriction( index )
+		return
+	end
+	AddDoorRestriction( index, data )
 end )
 
 util.AddNetworkString( "SyncLockTable" )
 net.Receive( "SyncLockTable", function()
-	local entindex = net.ReadInt( 32 )
-	local ent = ents.GetByIndex( entindex )
-	AddDoorLock( entindex )
+	local index = net.ReadInt( 32 )
+	local remove = net.ReadBool()
+	local ent = ents.GetByIndex( index )
+	if remove then
+		RemoveDoorLock( index )
+		ent:Fire( "Unlock" )
+		return
+	end
+	AddDoorLock( index )
 	ent:Fire( "Lock" )
-end )
-
-util.AddNetworkString( "SyncDoorTableRemove" )
-net.Receive( "SyncDoorTableRemove", function()
-	local entindex = net.ReadInt( 32 )
-	RemoveDoorRestriction( entindex )
-end )
-
-util.AddNetworkString( "SyncLockTableRemove" )
-net.Receive( "SyncLockTableRemove", function()
-	local entindex = net.ReadInt( 32 )
-	local ent = ents.GetByIndex( entindex )
-	RemoveDoorLock( entindex )
-	ent:Fire( "Unlock" )
 end )
 
 util.AddNetworkString( "SetDoorName" )
@@ -213,4 +231,25 @@ net.Receive( "DarkRPDoorChat", function()
 	local ply = net.ReadEntity()
 	local text = net.ReadString()
 	DarkRP.notify( ply, 0, 6, text )
+end )
+
+util.AddNetworkString( "SyncCoOwner" )
+net.Receive( "SyncCoOwner", function( len, sender )
+	local ply = net.ReadEntity()
+	local index = net.ReadInt( 32 )
+	local tbl = net.ReadTable()
+	local remove = net.ReadBool()
+	local door = ents.GetByIndex( index )
+	if DoorTable[index] then
+		DS_Notify( sender, "This door is managed by a group and cannot be owned." )
+		return
+	end
+	if remove then
+		RemoveCoOwner( ply, index )
+		return
+	end
+	AddCoOwner( ply, index )
+	net.Start( "SyncCoOwnerClient" )
+	net.WriteTable( tbl )
+	net.Broadcast()
 end )

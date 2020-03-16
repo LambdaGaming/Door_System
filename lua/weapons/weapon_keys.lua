@@ -53,9 +53,10 @@ function SWEP:PrimaryAttack()
 	if !IsFirstTimePredicted() then return end
 	local tr = self.Owner:GetEyeTrace().Entity
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
+	local index = tr:EntIndex()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
     if allowed[tr:GetClass()] then
-		if doorowner == self.Owner then
+		if doorowner == self.Owner or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self.Owner ) ) then
 			if SERVER then
 				tr:Fire( "lock", "", 0 )
 				KeySound( self.Owner, true )
@@ -78,18 +79,19 @@ function SWEP:SecondaryAttack()
 	if !IsFirstTimePredicted() then return end
 	local tr = self.Owner:GetEyeTrace().Entity
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
+	local index = tr:EntIndex()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
     if allowed[tr:GetClass()] then
-		if doorowner == self.Owner then
+		if doorowner == self.Owner or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self.Owner ) ) then
 			if SERVER then
 				tr:Fire( "unlock", "", 0 )
-				KeySound( self.Owner, false )
+				KeySound( self.Owner )
 			end
 		else
 			if self.Owner:CanUseDoor( tr:EntIndex() ) then
 				if SERVER then
 					tr:Fire( "unlock", "", 0 )
-					KeySound( self.Owner, false )
+					KeySound( self.Owner )
 				end
 			else
 				if SERVER then self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" ) end

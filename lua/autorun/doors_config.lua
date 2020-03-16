@@ -66,7 +66,7 @@ DOOR_CONFIG_MENU_COLOR = Color( 49, 53, 61, 200 ) --Color of the menu background
 
 DOOR_CONFIG_BUTTON_COLOR = Color( 230, 93, 80, 255 ) --Color of the buttons
 
-DOOR_CONFIG_NAME_COLOR = color_black --Color of the door name on the HUD
+DOOR_CONFIG_NAME_COLOR = color_white --Color of the door name on the HUD
 
 DOOR_CONFIG_TEXT_COLOR = Color( 255, 0, 0 ) --Color of the rest of the door info on the HUD
 

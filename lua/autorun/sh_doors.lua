@@ -1,6 +1,7 @@
 
 DoorTable = {}
 DoorTable.Lock = {}
+DoorCoOwners = {}
 
 local meta = FindMetaTable( "Player" )
 function meta:CanUseDoor( index )
