@@ -243,7 +243,7 @@ OpenDoorMenuAdmin = function( ply, door )
 	end
 	restrictbutton.DoClick = function()
 		local joblist = vgui.Create( "DComboBox", menu )
-		joblist:SetPos( 30, 215 )
+		joblist:SetPos( 30, 255 )
 		joblist:SetSize( 190, 20 )
 		joblist:CenterHorizontal()
 		joblist:SetValue( "Select Restriction" )
