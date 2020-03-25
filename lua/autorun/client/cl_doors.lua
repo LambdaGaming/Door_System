@@ -286,7 +286,7 @@ OpenDoorMenuAdmin = function( ply, door )
 		DS_Notify( ply, "Door restriction successfully removed." )
 	end
 
-	if DoorTable.Lock[entindex] then
+	if DoorTable.Lock and DoorTable.Lock[entindex] then
 		local forcelock = vgui.Create( "DButton", menu )
 		forcelock:SetText( "Disable Force Lock" )
 		forcelock:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
@@ -307,6 +307,7 @@ OpenDoorMenuAdmin = function( ply, door )
 			DS_Notify( ply, "Door will no longer lock when the server loads." )
 		end
 	else
+		if !DoorTable.Lock then DoorTable.Lock = {} end
 		local forcelock = vgui.Create( "DButton", menu )
 		forcelock:SetText( "Force Lock Door" )
 		forcelock:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
