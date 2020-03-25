@@ -1,6 +1,7 @@
 
-DoorTable = {}
-DoorTable.Lock = {}
+DoorTable = {
+	Lock = {}
+}
 DoorCoOwners = {}
 
 local meta = FindMetaTable( "Player" )

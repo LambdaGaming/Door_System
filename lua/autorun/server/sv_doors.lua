@@ -33,23 +33,25 @@ function LoadDoorTable( sync )
 end
 
 hook.Add( "InitPostEntity", "UpdateDoorTable", function()
-	if !file.Exists( doorfile, "DATA" ) then
-		file.CreateDir( "doorsystem" )
-		file.Write( doorfile, "{}" )
-	end
-
-	LoadDoorTable()
-
-	for k,v in pairs( ents.FindByClass( "prop_door*" ) ) do
-		if DoorTable.Lock[v:EntIndex()] then
-			v:Fire( "Lock" )
+	timer.Simple( 5, function()
+		if !file.Exists( doorfile, "DATA" ) then
+			file.CreateDir( "doorsystem" )
+			file.Write( doorfile, "{}" )
 		end
-	end
-	for k,v in pairs( ents.FindByClass( "func_door*" ) ) do --Using 2 for loops here since it's still faster than using ents.GetAll
-		if DoorTable.Lock[v:EntIndex()] then
-			v:Fire( "Lock" )
+
+		LoadDoorTable()
+
+		for k,v in pairs( ents.FindByClass( "prop_door*" ) ) do
+			if DoorTable.Lock[v:EntIndex()] then
+				v:Fire( "Lock" )
+			end
 		end
-	end
+		for k,v in pairs( ents.FindByClass( "func_door*" ) ) do --Using 2 for loops here since it's still faster than using ents.GetAll
+			if DoorTable.Lock[v:EntIndex()] then
+				v:Fire( "Lock" )
+			end
+		end
+	end )
 end )
 
 function AddDoorRestriction( index, id )
