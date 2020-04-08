@@ -254,3 +254,31 @@ net.Receive( "SyncCoOwner", function( len, sender )
 	net.WriteTable( tbl )
 	net.Broadcast()
 end )
+
+local function SellAllDoors( ply )
+	for k,v in pairs( ents.FindByClass( "prop_door*" ) ) do
+		if v:GetNWEntity( "DoorOwner" ) == ply then
+			v:SetNWEntity( "DoorOwner", NULL )
+			v:SetNWString( "DoorName", "" )
+			v:Fire( "Unlock" )
+		end
+	end
+	for k,v in pairs( ents.FindByClass( "func_door*" ) ) do
+		if v:GetNWEntity( "DoorOwner" ) == ply then
+			v:SetNWEntity( "DoorOwner", NULL )
+			v:SetNWString( "DoorName", "" )
+			v:Fire( "Unlock" )
+		end
+	end
+end
+
+local function SellAllDoorsCommand( ply, text )
+	local split = string.Split( text, " " )
+	if split[1] == "/sellalldoors" then
+		SellAllDoors( ply )
+		DS_Notify( ply, "You have sold all of your doors." )
+		return ""
+	end
+end
+hook.Add( "PlayerSay", "DS_SellAllDoors", SellAllDoorsCommand )
+hook.Add( "PlayerDisconnected", "DS_DoorDisconnect", SellAllDoors )
