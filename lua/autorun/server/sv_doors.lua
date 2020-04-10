@@ -93,55 +93,71 @@ net.Receive( "OwnDoor", function( len, ply )
 	local entindex = ent:EntIndex()
 	if override then
 		ent:SetNWEntity( "DoorOwner", remoteply )
-		DS_Notify( ply, "Door ownership override successful." )
+		DS_Notify(ply, DOOR_CONFIG_MESSAGES["Override Successful"])
 		return
 	end
 	if DoorTable[entindex] then
-		DS_Notify( ply, "This door is managed by a group and cannot be owned." )
+		DS_Notify(ply, DOOR_CONFIG_MESSAGES["Managed By Another Group"])
 		return
 	end
 	if IsValid( doorowner ) then
 		if doorowner != ply then
-			DS_Notify( ply, "This door is already owned by someone else." )
+			DS_Notify(ply, DOOR_CONFIG_MESSAGES["Do Not Own"])
 		else
-			DS_Notify( ply, "You already own this door." )
+			DS_Notify(ply, DOOR_CONFIG_MESSAGES["Already Owned"])
 		end
 	else
+		if PlayerDoors[ply] == nil then
+			PlayerDoors[ply] = 0
+		end
 		if DarkRP then
-			if DOOR_CONFIG_CHARGE_EXTRA and DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+			if DOOR_CONFIG_DOOR_GROUPS_ENABLED and DOOR_CONFIG_CHARGE_EXTRA and DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 				local doorgroup = DoorGroups[game.GetMap()][entindex]
 				local groupedprice = #doorgroup.ChildDoors * DOOR_CONFIG_PRICE
-				if ply:canAfford( groupedprice ) then
-					ply:addMoney( -groupedprice )
+				if DOOR_CONFIG_PRICE_CHECK(ply, groupedprice) then
+					DOOR_CONFIG_PURCHASE(ply, groupedprice)
 				else
-					DS_Notify( "You can't afford to buy these doors." )
+					DS_Notify(ply, DOOR_CONFIG_MESSAGES["Cannot Afford"])
 					return
 				end
-			end
-			if ply:canAfford( DOOR_CONFIG_PRICE ) then
-				ply:addMoney( -DOOR_CONFIG_PRICE )
-			else
-				DS_Notify( "You can't afford to buy this door." )
-				return
-			end
-		end
-		ent:SetNWEntity( "DoorOwner", ply )
-		DS_Notify( ply, "You now own this door." )
-		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
-			local doorgroup = DoorGroups[game.GetMap()][entindex]
-			for k,v in pairs( doorgroup.ChildDoors ) do
-				local childdoor = ents.GetByIndex( v )
-				if IsValid( childdoor ) then
-					if IsValid( childdoor:GetNWEntity( "DoorOwner" ) ) then
-						if DOOR_CONFIG_GROUP_OVERRIDE then
-							childdoor:SetNWEntity( "DoorOwner", ply )
+				if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+					local doorgroup = DoorGroups[game.GetMap()][entindex]
+					for k,v in pairs( doorgroup.ChildDoors ) do
+						local childdoor = ents.GetByIndex( v )
+						if IsValid( childdoor ) then
+							if IsValid( childdoor:GetNWEntity( "DoorOwner" ) ) then
+								if DOOR_CONFIG_GROUP_OVERRIDE then
+									childdoor:SetNWEntity( "DoorOwner", ply )
+								end
+							else
+								childdoor:SetNWEntity( "DoorOwner", ply )
+							end					
 						end
-					else
-						childdoor:SetNWEntity( "DoorOwner", ply )
 					end
+					DS_Notify( ply, "You also now own all of the doors in the "..doorgroup.Name.." door group." )												
 				end
 			end
-			DS_Notify( ply, "You also now own all of the doors in the "..doorgroup.Name.." door group." )
+		end
+		if DoorFunctions.DOOR_PRICE_CHECK(ply) then
+			if DOOR_CONFIG_ALLOWED_DOOR_AMOUNT > 0 then
+				if PlayerDoors[ply] < DOOR_CONFIG_ALLOWED_DOOR_AMOUNT then
+					if DoorFunctions.DOOR_PRICE_CHECK(ply) then
+						DoorFunctions.DOOR_PURCHASE(ply)
+						PlayerDoors[ply] = PlayerDoors[ply] + 1
+						ent:SetNWEntity( "DoorOwner", ply )
+						DS_Notify( ply, DoorFunctions.OWN_MESSAGE(ply))
+					else
+						DS_Notify( ply, DOOR_CONFIG_MESSAGES["Cannot Afford"])
+					end
+				else DS_Notify( ply, DOOR_CONFIG_MESSAGES["Ran Out of Doors"]) end
+			else
+				DoorFunctions.DOOR_PURCHASE(ply)
+				DS_Notify(ply, DoorFunctions.OWN_MESSAGE(ply))
+				ent:SetNWEntity( "DoorOwner", ply )
+			end
+		else
+			DS_Notify(ply, DOOR_CONFIG_MESSAGES["Cannot Afford"])
+			return
 		end
 	end
 end )
@@ -154,6 +170,9 @@ net.Receive( "UnownDoor", function( len, ply )
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
 	local entindex = ent:EntIndex()
 	if override then
+		if PlayerDoors[doorowner] != nil and PlayerDoors[doorowner] > 0 then
+			PlayerDoors[doorowner] = PlayerDoors[doorowner] - 1
+		end
 		ent:SetNWEntity( "DoorOwner", NULL )
 		ent:SetNWString( "DoorName", "" )
 		ent:Fire( "unlock", "", 0 )
@@ -169,6 +188,9 @@ net.Receive( "UnownDoor", function( len, ply )
 			ent:SetNWEntity( "DoorOwner", NULL )
 			ent:SetNWString( "DoorName", "" )
 			ent:Fire( "unlock", "", 0 )
+			if PlayerDoors[ply] != nil and PlayerDoors[ply] > 0 then
+				PlayerDoors[ply] = PlayerDoors[ply] - 1
+			end
 			DS_Notify( ply, "You have sold this door." )
 			if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 				local doorgroup = DoorGroups[game.GetMap()][entindex]
@@ -184,12 +206,13 @@ net.Receive( "UnownDoor", function( len, ply )
 				end
 				DS_Notify( ply, "You have also sold all of the doors in the "..doorgroup.Name.." door group." )
 			end
+
 			DoorCoOwners[entindex] = nil
 			net.Start( "SyncCoOwnerClient" )
 			net.WriteTable( DoorCoOwners )
 			net.Broadcast()
 		else
-			DS_Notify( ply, "You do not own this door." )
+			DS_Notify(ply, DOOR_CONFIG_MESSAGES["Do Not Own"])
 		end
 	end
 end )
@@ -242,7 +265,7 @@ net.Receive( "SyncCoOwner", function( len, sender )
 	local remove = net.ReadBool()
 	local door = ents.GetByIndex( index )
 	if DoorTable[index] then
-		DS_Notify( sender, "This door is managed by a group and cannot be owned." )
+		DS_Notify( sender, "This door is locked ..." )
 		return
 	end
 	if remove then
@@ -270,13 +293,14 @@ local function SellAllDoors( ply )
 			v:Fire( "Unlock" )
 		end
 	end
+	PlayerDoors[ply] = nil
 end
 
 local function SellAllDoorsCommand( ply, text )
 	local split = string.Split( text, " " )
-	if split[1] == "/sellalldoors" then
+	if split[1] == DOOR_CONFIG_COMMANDS["Sell All"] then
 		SellAllDoors( ply )
-		DS_Notify( ply, "You have sold all of your doors." )
+		DS_Notify(ply, DOOR_CONFIG_MESSAGES["No Doors Owned"])
 		return ""
 	end
 end
