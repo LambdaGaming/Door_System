@@ -78,7 +78,7 @@ DOOR_CONFIG_DISTANCE = 100 --Max distance in hammer units away from a door where
 
 DOOR_CONFIG_ALLOW_ADMIN = false --Whether or not admins should be able to edit door ownerships alongside superadmins
 
-DOOR_CONFIG_ALLOWED_DOOR_AMOUNT = 3 --How many doors the player may have at any time. If 0, you can own unlimited
+DOOR_CONFIG_ALLOWED_DOOR_AMOUNT = 0 --How many doors the player may have at any time. If 0, you can own unlimited
 
 
 //Choose one by removing or adding --
