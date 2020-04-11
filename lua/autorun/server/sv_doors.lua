@@ -265,7 +265,7 @@ net.Receive( "SyncCoOwner", function( len, sender )
 	local remove = net.ReadBool()
 	local door = ents.GetByIndex( index )
 	if DoorTable[index] then
-		DS_Notify( sender, "This door is locked ..." )
+		DS_Notify( sender, DOOR_CONFIG_MESSAGES["Managed By Another Group"] )
 		return
 	end
 	if remove then
