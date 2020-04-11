@@ -101,7 +101,7 @@ end
 
 local function OWN_MESSAGE(ply)
 	if DOOR_CONFIG_ALLOWED_DOOR_AMOUNT > 0 then return DOOR_CONFIG_MESSAGES["Purchase Successful"] .. 
-	"You have " .. tostring(DOOR_CONFIG_ALLOWED_DOOR_AMOUNT - PlayerDoors[ply]) .. " doors remaining." end
+	" You have " .. tostring(DOOR_CONFIG_ALLOWED_DOOR_AMOUNT - PlayerDoors[ply]) .. " doors remaining." end
 	return DOOR_CONFIG_MESSAGES["Purchase Successful"]
 end
 
@@ -120,7 +120,8 @@ DOOR_CONFIG_MESSAGES = {
 	["Sold From Group"] = "You have also sold all of the doors in the ", -- doorgroupName door group.
 	["Sold All"] = "You have sold all of your doors.",
 	["Ran Out of Doors"] = "You ran out of doors! Remove a door or remove all doors with " .. DOOR_CONFIG_COMMANDS["Sell All"],
-	["No Doors Owned"] = "You have sold all of your doors."
+	["No Doors Owned"] = "You do not own any doors.",
+	["Door Sold"] = "You have sold this door."
 }
 
 
