@@ -84,19 +84,21 @@ DOOR_CONFIG_ALLOWED_DOOR_AMOUNT = 0 --How many doors the player may have at any 
 //Choose one by removing or adding --
 local function DOOR_CONFIG_PRICE_CHECK(ply, price) price = price or DOOR_CONFIG_PRICE return
 	((ply:getDarkRPVar("money") or 0) >= price) //DarkRP
-	--(ply:getChar():hasMoney(price)) //Nut Script
-	--((ply:GetMoney() or 0) >= price) //BaseWars
-	--ply:SH_CanAffordStandard(price) //SH Pointshop
-	--ply:PS_HasPoints(price) //Pointshop
+	--(ply:getChar():hasMoney(price))             //Nut Script
+	--((ply:GetMoney() or 0) >= price)            //BaseWars
+	--ply:SH_CanAffordStandard(price)             //SH Pointshop
+	--ply:PS_HasPoints(price)                     //Pointshop
+	--true                                        //Sandbox
 end
 
 //Choose one by removing or adding --
+//For no currency, be sure to have -- in front of all currencies below
 local function DOOR_CONFIG_PURCHASE(ply, price) price = price or DOOR_CONFIG_PRICE 
-	ply:addMoney(-price) //DarkRP
-	--ply:getChar():takeMoney(price) //Nut Script
-	--ply:GiveMoney(-price) //BaseWars
+	ply:addMoney(-price)             //DarkRP
+	--ply:getChar():takeMoney(price)   //Nut Script
+	--ply:GiveMoney(-price)            //BaseWars
 	--ply:SH_AddStandardPoints(-price) //SH Pointshop
-	--ply:PS_TakePoints(price) //Pointshop
+	--ply:PS_TakePoints(price)         //Pointshop
 end
 
 local function OWN_MESSAGE(ply)
@@ -121,7 +123,8 @@ DOOR_CONFIG_MESSAGES = {
 	["Sold All"] = "You have sold all of your doors.",
 	["Ran Out of Doors"] = "You ran out of doors! Remove a door or remove all doors with " .. DOOR_CONFIG_COMMANDS["Sell All"],
 	["No Doors Owned"] = "You do not own any doors.",
-	["Door Sold"] = "You have sold this door."
+	["Door Sold"] = "You have sold this door.",
+	["Door Locked"] = "This door is locked ..."
 }
 
 
