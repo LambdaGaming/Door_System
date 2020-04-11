@@ -5,13 +5,6 @@ surface.CreateFont( "DoorFont", {
 	weight = 1000
 } )
 
-local allowed = {
-	["prop_door"] = true,
-	["prop_door_rotating"] = true,
-	["func_door"] = true,
-	["func_door_rotating"] = true
-}
-
 local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 local OpenDoorMenuAdmin, OpenDoorMenu
 
@@ -376,7 +369,7 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 	local entindex = ent:EntIndex()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
 	if ply.MenuOpen then return end
-	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
+	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and Door_System_Config.AllowedDoors[ent:GetClass()] then
 		if doorname != "" then
 			draw.SimpleText( doorname, "DoorFont", ScrW() / 2, ScrH() / 2 - 20, DOOR_CONFIG_NAME_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
@@ -404,7 +397,7 @@ hook.Add( "PlayerButtonDown", "DoorButtons", function( ply, button )
 	local doorkey = GetConVar( "DoorKey" ):GetInt()
 	local ent = ply:GetEyeTrace().Entity
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
-	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
+	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and Door_System_Config.AllowedDoors[ent:GetClass()] then
 		CheckMenuAccess( ply, ent )
 	end
 end )
