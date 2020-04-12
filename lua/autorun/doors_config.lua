@@ -76,7 +76,10 @@ DOOR_CONFIG_BUTTON_TEXT_COLOR = color_white --Color of the text on the buttons
 
 DOOR_CONFIG_DISTANCE = 100 --Max distance in hammer units away from a door where players can interact with it
 
-DOOR_CONFIG_ALLOW_ADMIN = false --Whether or not admins should be able to edit door ownerships alongside superadmins
+DOOR_CONFIG_ADMIN_RANKS = { --The ranks that have permission to edit door ownerships. CAPS COUNT
+    ["superadmin"] = true,
+    --["admin"] = true,
+}
 
 DOOR_CONFIG_ALLOWED_DOOR_AMOUNT = 0 --How many doors the player may have at any time. If 0, you can own unlimited
 

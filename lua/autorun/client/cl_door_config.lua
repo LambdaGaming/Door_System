@@ -17,3 +17,7 @@ Door_System_Config.AllowedDoors = {
 	["func_door"] = true,
 	["func_door_rotating"] = true
 }
+
+
+Door_System_Config.ShowDoorHealth = true -- Show the door health. 
+		-- This is only useful if you have a door health addon like "Destructible Doors for Gmod!"

@@ -52,7 +52,7 @@ local function SetDoorName( ply, door )
 end
 
 local function CheckMenuAccess( ply, door )
-	if ply:IsSuperAdmin() or ( ply:IsAdmin() and DOOR_CONFIG_ALLOW_ADMIN ) then
+	if DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()] then
 		OpenDoorMenuAdmin( ply, door )
 	else
 		OpenDoorMenu( ply, door )
@@ -387,6 +387,7 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 			end
 		end
 		draw.SimpleText( "Press "..keyname.." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		if Door_System_Config.ShowDoorHealth then draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER ) end
 		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 			draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
