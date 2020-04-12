@@ -81,6 +81,12 @@ DOOR_CONFIG_ADMIN_RANKS = { --The ranks that have permission to edit door owners
     --["admin"] = true,
 }
 
+//Enter the entities you want admins always to have access to. For example, if you don't want users to manage "func_door"
+DOOR_CONFIG_ADMIN_CAN_ALWAYS_CONFIGURE = { -- but you want admins to manage them, then put the entity class here.
+	--["func_door"] = true,
+	--["func_door_rotating"] = true,
+}
+
 DOOR_CONFIG_ALLOWED_DOOR_AMOUNT = 0 --How many doors the player may have at any time. If 0, you can own unlimited
 
 
