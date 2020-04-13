@@ -200,7 +200,8 @@ OpenDoorMenuAdmin = function( ply, door, adminlimited)
 
 	if not adminlimited then OpenMenuBasics( menu, ply, door ) end
 
-	local adminSettingsOffset = 100
+	local adminSettingsOffset = 0
+	if adminlimited then adminSettingsOffset = 100 end
 
 	local adminlabel = Label( "Admin Settings", menu )
 	adminlabel:SetSize( 190, 15 )
@@ -374,7 +375,7 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
 	local validdoor = Door_System_Config.AllowedDoors[entclass]
 	local adminonlydoor = not validdoor and DOOR_CONFIG_ADMIN_CAN_ALWAYS_CONFIGURE[entclass] and DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()]
-	print(tostring(validdoor))
+
 	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and (validdoor or adminonlydoor) then
 		if doorname != "" then
 			draw.SimpleText( doorname, "DoorFont", ScrW() / 2, ScrH() / 2 - 20, DOOR_CONFIG_NAME_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
