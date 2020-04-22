@@ -368,6 +368,7 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 	local ply = LocalPlayer()
 	if ply.MenuOpen then return end
 	local ent = ply:GetEyeTrace().Entity
+	if not IsValid(ent) then return end
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
 	local doorname = ent:GetNWString( "DoorName" )
 	local entindex = ent:EntIndex()
@@ -407,6 +408,7 @@ end )
 hook.Add( "PlayerButtonDown", "DoorButtons", function( ply, button )
 	local doorkey = GetConVar( "DoorKey" ):GetInt()
 	local ent = ply:GetEyeTrace().Entity
+	if not IsValid(ent) then return end
 	local entclass = ent:GetClass()
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
 	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance then
