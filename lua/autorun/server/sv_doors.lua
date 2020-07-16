@@ -2,12 +2,13 @@
 local doorfile = "doorsystem/"..game.GetMap()..".json"
 
 util.AddNetworkString( "SyncDoorTableClient" )
-hook.Add( "PlayerInitialSpawn", "UpdateDoorTableClient", function( ply )
+local function UpdateDoorTableClient( ply )
 	local readtable = util.JSONToTable( file.Read( doorfile ) )
 	net.Start( "SyncDoorTableClient" )
 	net.WriteTable( readtable )
 	net.Send( ply )
-end )
+end
+hook.Add( "PlayerInitialSpawn", "UpdateDoorTableClient", UpdateDoorTableClient )
 
 util.AddNetworkString( "DS_Notify" )
 function DS_Notify( ply, text )
@@ -32,7 +33,7 @@ function LoadDoorTable( sync )
 	end
 end
 
-hook.Add( "InitPostEntity", "UpdateDoorTable", function()
+local function UpdateDoorTable()
 	if !file.Exists( doorfile, "DATA" ) then
 		file.CreateDir( "doorsystem" )
 		file.Write( doorfile, "{}" )
@@ -51,7 +52,18 @@ hook.Add( "InitPostEntity", "UpdateDoorTable", function()
 			v:Fire( "Lock" )
 		end
 	end
-end )
+end
+hook.Add( "InitPostEntity", "UpdateDoorTable", UpdateDoorTable )
+
+local function DoorCloseTimer( ply, ent )
+	local index = ent:EntIndex()
+	if Door_System_Config.AllowedDoors[ent:GetClass()] and DOOR_CONFIG_AUTO_CLOSE and !timer.Exists( "DoorTimer"..index ) then
+		timer.Create( "DoorTimer"..index, DOOR_CONFIG_CLOSE_TIME, 1, function()
+			if IsValid( ent ) then ent:Fire( "Close" ) end
+		end )
+	end
+end
+hook.Add( "PlayerUse", "DoorCloseTimer", DoorCloseTimer )
 
 function AddDoorRestriction( index, id )
 	DoorTable[index] = id
@@ -295,6 +307,7 @@ local function SellAllDoors( ply )
 	end
 	PlayerDoors[ply] = nil
 end
+hook.Add( "PlayerSay", "DS_SellAllDoors", SellAllDoorsCommand )
 
 local function SellAllDoorsCommand( ply, text )
 	local split = string.Split( text, " " )
@@ -304,5 +317,4 @@ local function SellAllDoorsCommand( ply, text )
 		return ""
 	end
 end
-hook.Add( "PlayerSay", "DS_SellAllDoors", SellAllDoorsCommand )
 hook.Add( "PlayerDisconnected", "DS_DoorDisconnect", SellAllDoors )

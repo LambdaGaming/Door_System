@@ -26,13 +26,6 @@ function SWEP:Initialize()
 	self:SetHoldType( "rpg" )
 end
 
-local allowed = {
-	["prop_door"] = true,
-	["prop_door_rotating"] = true,
-	["func_door"] = true,
-	["func_door_rotating"] = true
-}
-
 local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 
 local function ForceOpen( ply, door )
@@ -54,7 +47,7 @@ function SWEP:PrimaryAttack()
 			return
 		end
 	end
-    if allowed[tr:GetClass()] and SERVER then
+    if Door_System_Config.AllowedDoors[tr:GetClass()] and SERVER then
 		ForceOpen( self.Owner, tr )
 	end
     self:SetNextPrimaryFire( CurTime() + 1 )

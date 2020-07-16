@@ -76,6 +76,9 @@ DOOR_CONFIG_BUTTON_TEXT_COLOR = color_white --Color of the text on the buttons
 
 DOOR_CONFIG_DISTANCE = 100 --Max distance in hammer units away from a door where players can interact with it
 
+DOOR_CONFIG_AUTO_CLOSE = false --Whether or not doors should close automatically; useful for doors on maps that can't be closed after they're opened
+	DOOR_CONFIG_CLOSE_TIME = 10 --Time in seconds before the door closes after being opened
+
 DOOR_CONFIG_ADMIN_RANKS = { --The ranks that have permission to edit door ownerships. CAPS COUNT
     ["superadmin"] = true,
     --["admin"] = true,

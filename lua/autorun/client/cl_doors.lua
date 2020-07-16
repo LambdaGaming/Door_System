@@ -364,7 +364,7 @@ local function ListCoOwners( index )
 end
 
 local color_red = DOOR_CONFIG_TEXT_COLOR
-hook.Add( "HUDPaint", "DoorHUD", function()
+local function DoorHUD()
 	local ply = LocalPlayer()
 	if ply.MenuOpen then return end
 	local ent = ply:GetEyeTrace().Entity
@@ -403,9 +403,10 @@ hook.Add( "HUDPaint", "DoorHUD", function()
 			draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
 	end
-end )
+end
+hook.Add( "HUDPaint", "DoorHUD", DoorHUD )
 
-hook.Add( "PlayerButtonDown", "DoorButtons", function( ply, button )
+local function DoorButtons( ply, button )
 	local doorkey = GetConVar( "DoorKey" ):GetInt()
 	local ent = ply:GetEyeTrace().Entity
 	if not IsValid(ent) then return end
@@ -418,7 +419,8 @@ hook.Add( "PlayerButtonDown", "DoorButtons", function( ply, button )
 			CheckMenuAccess(ply, ent, true)
 		end
 	end
-end )
+end
+hook.Add( "PlayerButtonDown", "DoorButtons", DoorButtons )
 
 net.Receive( "SyncDoorTableClient", function()
 	local tbl = net.ReadTable()

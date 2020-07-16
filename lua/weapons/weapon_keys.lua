@@ -29,13 +29,6 @@ function SWEP:ShouldDrawViewModel()
 	return false
 end
 
-local allowed = {
-	["prop_door"] = true,
-	["prop_door_rotating"] = true,
-	["func_door"] = true,
-	["func_door_rotating"] = true
-}
-
 local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 
 local function KeySound( ply, lock )
@@ -55,7 +48,7 @@ function SWEP:PrimaryAttack()
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
 	local index = tr:EntIndex()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
-    if allowed[tr:GetClass()] then
+    if Door_System_Config.AllowedDoors[tr:GetClass()] then
 		if doorowner == self.Owner or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self.Owner ) ) then
 			if SERVER then
 				tr:Fire( "lock", "", 0 )
@@ -81,7 +74,7 @@ function SWEP:SecondaryAttack()
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
 	local index = tr:EntIndex()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
-    if allowed[tr:GetClass()] then
+    if Door_System_Config.AllowedDoors[tr:GetClass()] then
 		if doorowner == self.Owner or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self.Owner ) ) then
 			if SERVER then
 				tr:Fire( "unlock", "", 0 )
