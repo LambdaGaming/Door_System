@@ -307,7 +307,7 @@ local function SellAllDoors( ply )
 	end
 	PlayerDoors[ply] = nil
 end
-hook.Add( "PlayerSay", "DS_SellAllDoors", SellAllDoorsCommand )
+hook.Add( "PlayerDisconnected", "DS_DoorDisconnect", SellAllDoors )
 
 local function SellAllDoorsCommand( ply, text )
 	local split = string.Split( text, " " )
@@ -317,4 +317,4 @@ local function SellAllDoorsCommand( ply, text )
 		return ""
 	end
 end
-hook.Add( "PlayerDisconnected", "DS_DoorDisconnect", SellAllDoors )
+hook.Add( "PlayerSay", "DS_SellAllDoors", SellAllDoorsCommand )
