@@ -96,17 +96,17 @@ DOOR_CONFIG_ALLOWED_DOOR_AMOUNT = 0 --How many doors the player may have at any 
 //Choose one by removing or adding --
 local function DOOR_CONFIG_PRICE_CHECK(ply, price) price = price or DOOR_CONFIG_PRICE return
 	((ply:getDarkRPVar("money") or 0) >= price) //DarkRP
-	--(ply:getChar():hasMoney(price))             //Nut Script
-	--((ply:GetMoney() or 0) >= price)            //BaseWars
-	--ply:SH_CanAffordStandard(price)             //SH Pointshop
-	--ply:PS_HasPoints(price)                     //Pointshop
-	--true                                        //Sandbox
+	--(ply:getChar():hasMoney(price))           //Nut Script
+	--((ply:GetMoney() or 0) >= price)          //BaseWars
+	--ply:SH_CanAffordStandard(price)           //SH Pointshop
+	--ply:PS_HasPoints(price)                   //Pointshop
+	--true                                      //Sandbox
 end
 
 //Choose one by removing or adding --
 //For no currency, be sure to have -- in front of all currencies below
 local function DOOR_CONFIG_PURCHASE(ply, price) price = price or DOOR_CONFIG_PRICE 
-	ply:addMoney(-price)             //DarkRP
+	ply:addMoney(-price)               //DarkRP
 	--ply:getChar():takeMoney(price)   //Nut Script
 	--ply:GiveMoney(-price)            //BaseWars
 	--ply:SH_AddStandardPoints(-price) //SH Pointshop
@@ -114,31 +114,28 @@ local function DOOR_CONFIG_PURCHASE(ply, price) price = price or DOOR_CONFIG_PRI
 end
 
 local function OWN_MESSAGE(ply)
-	if DOOR_CONFIG_ALLOWED_DOOR_AMOUNT > 0 then return DOOR_CONFIG_MESSAGES["Purchase Successful"] .. 
-	" You have " .. tostring(DOOR_CONFIG_ALLOWED_DOOR_AMOUNT - PlayerDoors[ply]) .. " doors remaining." end
-	return DOOR_CONFIG_MESSAGES["Purchase Successful"]
+	if DOOR_CONFIG_ALLOWED_DOOR_AMOUNT > 0 then
+		return DOOR_CONFIG_MESSAGES["purchased"].." You have "..( DOOR_CONFIG_ALLOWED_DOOR_AMOUNT - PlayerDoors[ply] ).." doors remaining."
+	end
+	return DOOR_CONFIG_MESSAGES["purchased"]
 end
 
 DOOR_CONFIG_COMMANDS = {
-	["Sell All"] = "/sellalldoors"
+	["sellall"] = "/sellalldoors"
 }
 
 DOOR_CONFIG_MESSAGES = {
-	["Managed By Another Group"] = "This door is managed by a group and cannot be owned.",
-	["Already Owned"] = "This door is already owned by someone else.",
-	["Do Not Own"] = "You do not own this door.",
-	["Cannot Afford"] = "You can't afford to buy this door.",
-	["Purchase Successful"] = "You now own this door.",
-	["Own Of All of Group"] = "You also now own all of the doors in the ", -- doorgroupName door group.
-	["Override Successful"] = "Door ownership override successful.",
-	["Sold From Group"] = "You have also sold all of the doors in the ", -- doorgroupName door group.
-	["Sold All"] = "You have sold all of your doors.",
-	["Ran Out of Doors"] = "You ran out of doors! Remove a door or remove all doors with " .. DOOR_CONFIG_COMMANDS["Sell All"],
-	["No Doors Owned"] = "You do not own any doors.",
-	["Door Sold"] = "You have sold this door.",
-	["Door Locked"] = "This door is locked ..."
+	["managed"] = "This door is managed by a group and cannot be owned.",
+	["owned"] = "This door is already owned by someone else.",
+	["notowned"] = "You do not own this door.",
+	["cantafford"] = "You can't afford to buy this door.",
+	["purchased"] = "You now own this door.",
+	["override"] = "Door ownership override successful.",
+	["groupsold"] = "You have also sold all of the doors in the ", -- doorgroupName door group.
+	["soldall"] = "You have sold all of your doors.",
+	["maxdoors"] = "You ran out of doors! Remove a door or remove all doors with " .. DOOR_CONFIG_COMMANDS["sellall"],
+	["sold"] = "You have sold this door."
 }
-
 
 -------------------don't touch----------------------
 DoorFunctions.DOOR_PRICE_CHECK = DOOR_CONFIG_PRICE_CHECK

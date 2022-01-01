@@ -15,7 +15,3 @@ Simple door ownership system that works on any gamemode.
 
 ## Notes:
 - If you use this on DarkRP you'll have to disable the built-in door system for that gamemode. They shouldn't conflict with each other code-wise but the HUD elements will overlap.
-- This is a low priority project for me, so you'll mostly see nothing but bug fixes and occasional small features. I'll still be reviewing all pull requests, though.
-
-# Issues & Pull Requests
- If you would like to contribute to this repository by creating an issue or pull request, please refer to the [contributing guidelines.](https://lambdagaming.github.io/contributing.html)

@@ -105,18 +105,18 @@ net.Receive( "OwnDoor", function( len, ply )
 	local entindex = ent:EntIndex()
 	if override then
 		ent:SetNWEntity( "DoorOwner", remoteply )
-		DS_Notify(ply, DOOR_CONFIG_MESSAGES["Override Successful"])
+		DS_Notify(ply, DOOR_CONFIG_MESSAGES["override"])
 		return
 	end
 	if DoorTable[entindex] then
-		DS_Notify(ply, DOOR_CONFIG_MESSAGES["Managed By Another Group"])
+		DS_Notify(ply, DOOR_CONFIG_MESSAGES["managed"])
 		return
 	end
 	if IsValid( doorowner ) then
 		if doorowner != ply then
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["Do Not Own"])
+			DS_Notify(ply, DOOR_CONFIG_MESSAGES["notowned"])
 		else
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["Already Owned"])
+			DS_Notify(ply, DOOR_CONFIG_MESSAGES["owned"])
 		end
 	else
 		if PlayerDoors[ply] == nil then
@@ -130,7 +130,7 @@ net.Receive( "OwnDoor", function( len, ply )
 					hook.Run("Door_System_Purchase", ply, ent, groupedprice)
 					DoorFunctions.DOOR_PURCHASE(ply, groupedprice)
 				else
-					DS_Notify(ply, DOOR_CONFIG_MESSAGES["Cannot Afford"])
+					DS_Notify(ply, DOOR_CONFIG_MESSAGES["cantafford"])
 					return
 				end
 				if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
@@ -159,14 +159,14 @@ net.Receive( "OwnDoor", function( len, ply )
 					PlayerDoors[ply] = PlayerDoors[ply] + 1
 					ent:SetNWEntity( "DoorOwner", ply )
 					DS_Notify( ply, DoorFunctions.OWN_MESSAGE(ply))
-				else DS_Notify( ply, DOOR_CONFIG_MESSAGES["Ran Out of Doors"]) end
+				else DS_Notify( ply, DOOR_CONFIG_MESSAGES["maxdoors"]) end
 			else
 				DoorFunctions.DOOR_PURCHASE(ply)
 				DS_Notify(ply, DoorFunctions.OWN_MESSAGE(ply))
 				ent:SetNWEntity( "DoorOwner", ply )
 			end
 		else
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["Cannot Afford"])
+			DS_Notify(ply, DOOR_CONFIG_MESSAGES["cantafford"])
 			return
 		end
 	end
@@ -203,7 +203,7 @@ net.Receive( "UnownDoor", function( len, ply )
 				PlayerDoors[ply] = PlayerDoors[ply] - 1
 			end
 			hook.Run("Door_System_Sell", ply, doorowner)
-			DS_Notify( ply, DOOR_CONFIG_MESSAGES["Door Sold"] )
+			DS_Notify( ply, DOOR_CONFIG_MESSAGES["sold"] )
 			if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 				local doorgroup = DoorGroups[game.GetMap()][entindex]
 				for k,v in pairs( doorgroup.ChildDoors ) do
@@ -216,7 +216,7 @@ net.Receive( "UnownDoor", function( len, ply )
 						end
 					end
 				end
-				DS_Notify( ply, DOOR_CONFIG_MESSAGES["Sold From Group"] ..doorgroup.Name.." door group." )
+				DS_Notify( ply, DOOR_CONFIG_MESSAGES["groupsold"] ..doorgroup.Name.." door group." )
 			end
 
 			DoorCoOwners[entindex] = nil
@@ -224,7 +224,7 @@ net.Receive( "UnownDoor", function( len, ply )
 			net.WriteTable( DoorCoOwners )
 			net.Broadcast()
 		else
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["Do Not Own"])
+			DS_Notify(ply, DOOR_CONFIG_MESSAGES["notowned"])
 		end
 	end
 end )
@@ -277,7 +277,7 @@ net.Receive( "SyncCoOwner", function( len, sender )
 	local remove = net.ReadBool()
 	local door = ents.GetByIndex( index )
 	if DoorTable[index] then
-		DS_Notify( sender, DOOR_CONFIG_MESSAGES["Managed By Another Group"] )
+		DS_Notify( sender, DOOR_CONFIG_MESSAGES["managed"] )
 		return
 	end
 	if remove then
@@ -310,10 +310,9 @@ end
 hook.Add( "PlayerDisconnected", "DS_DoorDisconnect", SellAllDoors )
 
 local function SellAllDoorsCommand( ply, text )
-	local split = string.Split( text, " " )
-	if split[1] == DOOR_CONFIG_COMMANDS["Sell All"] then --Add a check here to see if they have any doors
+	if text == DOOR_CONFIG_COMMANDS["sellall"] then
 		SellAllDoors( ply )
-		DS_Notify(ply, DOOR_CONFIG_MESSAGES["Sold All"])
+		DS_Notify(ply, DOOR_CONFIG_MESSAGES["soldall"])
 		return ""
 	end
 end
