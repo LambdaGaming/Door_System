@@ -1,5 +1,4 @@
-
-CreateClientConVar( "DoorKey", KEY_F9, true, false, "Key that you press to access the menu of a door." )
+CreateClientConVar( "DoorKey", KEY_F2, true, false, "Key that you press to access the menu of a door." )
 
 hook.Add( "PopulateToolMenu", "DoorConfig", function()
     spawnmenu.AddToolMenuOption( "Options", "Door System", "DoorSystem", "Config", "", "", function( panel )
