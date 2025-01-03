@@ -1,21 +1,14 @@
-
 local doorfile = "doorsystem/"..game.GetMap()..".json"
-
 util.AddNetworkString( "SyncDoorTableClient" )
-local function UpdateDoorTableClient( ply )
+hook.Add( "PlayerInitialSpawn", "UpdateDoorTableClient", function( ply )
 	local readtable = util.JSONToTable( file.Read( doorfile ) )
 	net.Start( "SyncDoorTableClient" )
 	net.WriteTable( readtable )
 	net.Send( ply )
-end
-hook.Add( "PlayerInitialSpawn", "UpdateDoorTableClient", UpdateDoorTableClient )
+end )
 
 util.AddNetworkString( "DS_Notify" )
 function DS_Notify( ply, text )
-	if DarkRP then
-		DarkRP.notify( ply, 0, 6, text )
-		return
-	end
 	net.Start( "DS_Notify" )
 	net.WriteString( text )
 	net.Send( ply )
@@ -33,55 +26,33 @@ function LoadDoorTable( sync )
 	end
 end
 
-local function UpdateDoorTable()
+hook.Add( "InitPostEntity", "UpdateDoorTable", function()
 	if !file.Exists( doorfile, "DATA" ) then
 		file.CreateDir( "doorsystem" )
 		file.Write( doorfile, "{}" )
 	end
-
 	LoadDoorTable()
-
-	if !DoorTable.Lock then DoorTable.Lock = {} end
-	for k,v in pairs( ents.FindByClass( "prop_door*" ) ) do
-		if DoorTable.Lock[v:EntIndex()] then
+	for k,v in ipairs( ents.FindByClass( "prop_door*" ) ) do
+		local id = v:MapCreationID()
+		if DoorTable[id] and DoorTable[id] > 0 then
 			v:Fire( "Lock" )
 		end
 	end
-	for k,v in pairs( ents.FindByClass( "func_door*" ) ) do --Using 2 for loops here since it's still faster than using ents.GetAll
-		if DoorTable.Lock[v:EntIndex()] then
+	for k,v in ipairs( ents.FindByClass( "func_door*" ) ) do --Using 2 for loops here since it's still faster than using ents.GetAll
+		local id = v:MapCreationID()
+		if DoorTable[id] and DoorTable[id] > 0 then
 			v:Fire( "Lock" )
 		end
 	end
-end
-hook.Add( "InitPostEntity", "UpdateDoorTable", UpdateDoorTable )
-
-local function DoorCloseTimer( ply, ent )
-	local index = ent:EntIndex()
-	if Door_System_Config.AllowedDoors[ent:GetClass()] and DOOR_CONFIG_AUTO_CLOSE and !timer.Exists( "DoorTimer"..index ) then
-		timer.Create( "DoorTimer"..index, DOOR_CONFIG_CLOSE_TIME, 1, function()
-			if IsValid( ent ) then ent:Fire( "Close" ) end
-		end )
-	end
-end
-hook.Add( "PlayerUse", "DoorCloseTimer", DoorCloseTimer )
+end )
 
 function AddDoorRestriction( index, id )
 	DoorTable[index] = id
 	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
 end
 
-function AddDoorLock( index )
-	DoorTable.Lock[index] = true
-	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
-end
-
 function RemoveDoorRestriction( index )
 	DoorTable[index] = nil
-	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
-end
-
-function RemoveDoorLock( index )
-	DoorTable.Lock[index] = nil
 	file.Write( doorfile, util.TableToJSON( DoorTable, true ) )
 end
 
@@ -102,72 +73,40 @@ net.Receive( "OwnDoor", function( len, ply )
 	local remoteply = net.ReadEntity()
 	local override = net.ReadBool()
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
-	local entindex = ent:EntIndex()
+	local entindex = ent:MapCreationID()
 	if override then
 		ent:SetNWEntity( "DoorOwner", remoteply )
-		DS_Notify(ply, DOOR_CONFIG_MESSAGES["override"])
+		DS_Notify( ply, "Door ownership override successful." )
 		return
 	end
 	if DoorTable[entindex] then
-		DS_Notify(ply, DOOR_CONFIG_MESSAGES["managed"])
+		DS_Notify( ply, "This door is not ownable." )
 		return
 	end
 	if IsValid( doorowner ) then
 		if doorowner != ply then
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["notowned"])
+			DS_Notify( ply, "This door is already owned by someone else." )
 		else
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["owned"])
+			DS_Notify( ply, "You already own this door." )
 		end
 	else
-		if PlayerDoors[ply] == nil then
-			PlayerDoors[ply] = 0
-		end
-		if DarkRP then
-			if DOOR_CONFIG_DOOR_GROUPS_ENABLED and DOOR_CONFIG_CHARGE_EXTRA and DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
-				local doorgroup = DoorGroups[game.GetMap()][entindex]
-				local groupedprice = #doorgroup.ChildDoors * DOOR_CONFIG_PRICE
-				if DOOR_CONFIG_PRICE_CHECK(ply, groupedprice) then
-					hook.Run("Door_System_Purchase", ply, ent, groupedprice)
-					DoorFunctions.DOOR_PURCHASE(ply, groupedprice)
-				else
-					DS_Notify(ply, DOOR_CONFIG_MESSAGES["cantafford"])
-					return
-				end
-				if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
-					local doorgroup = DoorGroups[game.GetMap()][entindex]
-					for k,v in pairs( doorgroup.ChildDoors ) do
-						local childdoor = ents.GetByIndex( v )
-						if IsValid( childdoor ) then
-							if IsValid( childdoor:GetNWEntity( "DoorOwner" ) ) then
-								if DOOR_CONFIG_GROUP_OVERRIDE then
-									childdoor:SetNWEntity( "DoorOwner", ply )
-								end
-							else
-								childdoor:SetNWEntity( "DoorOwner", ply )
-							end					
+		ent:SetNWEntity( "DoorOwner", ply )
+		DS_Notify( ply, "You now own this door." )
+		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+			local doorgroup = DoorGroups[game.GetMap()][entindex]
+			for k,v in pairs( doorgroup.ChildDoors ) do
+				local childdoor = ents.GetByIndex( v )
+				if IsValid( childdoor ) then
+					if IsValid( childdoor:GetNWEntity( "DoorOwner" ) ) then
+						if DOOR_CONFIG_GROUP_OVERRIDE then
+							childdoor:SetNWEntity( "DoorOwner", ply )
 						end
+					else
+						childdoor:SetNWEntity( "DoorOwner", ply )
 					end
-					DS_Notify( ply, "You also now own all of the doors in the "..doorgroup.Name.." door group." )												
 				end
 			end
-		end
-		if DoorFunctions.DOOR_PRICE_CHECK(ply) then
-			if DOOR_CONFIG_ALLOWED_DOOR_AMOUNT > 0 then
-				if PlayerDoors[ply] < DOOR_CONFIG_ALLOWED_DOOR_AMOUNT then
-					hook.Run("Door_System_Purchase", ply, ent, DOOR_CONFIG_ALLOWED_DOOR_AMOUNT)
-					DoorFunctions.DOOR_PURCHASE(ply)
-					PlayerDoors[ply] = PlayerDoors[ply] + 1
-					ent:SetNWEntity( "DoorOwner", ply )
-					DS_Notify( ply, DoorFunctions.OWN_MESSAGE(ply))
-				else DS_Notify( ply, DOOR_CONFIG_MESSAGES["maxdoors"]) end
-			else
-				DoorFunctions.DOOR_PURCHASE(ply)
-				DS_Notify(ply, DoorFunctions.OWN_MESSAGE(ply))
-				ent:SetNWEntity( "DoorOwner", ply )
-			end
-		else
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["cantafford"])
-			return
+			DS_Notify( ply, "You also now own all of the doors in the "..doorgroup.Name.." door group." )
 		end
 	end
 end )
@@ -178,12 +117,8 @@ net.Receive( "UnownDoor", function( len, ply )
 	local ent = net.ReadEntity()
 	local override = net.ReadBool()
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
-	local entindex = ent:EntIndex()
+	local entindex = ent:MapCreationID()
 	if override then
-		hook.Run("Door_System_Sell", ply, doorowner)
-		if PlayerDoors[doorowner] != nil and PlayerDoors[doorowner] > 0 then
-			PlayerDoors[doorowner] = PlayerDoors[doorowner] - 1
-		end
 		ent:SetNWEntity( "DoorOwner", NULL )
 		ent:SetNWString( "DoorName", "" )
 		ent:Fire( "unlock", "", 0 )
@@ -199,11 +134,7 @@ net.Receive( "UnownDoor", function( len, ply )
 			ent:SetNWEntity( "DoorOwner", NULL )
 			ent:SetNWString( "DoorName", "" )
 			ent:Fire( "unlock", "", 0 )
-			if PlayerDoors[ply] != nil and PlayerDoors[ply] > 0 then
-				PlayerDoors[ply] = PlayerDoors[ply] - 1
-			end
-			hook.Run("Door_System_Sell", ply, doorowner)
-			DS_Notify( ply, DOOR_CONFIG_MESSAGES["sold"] )
+			DS_Notify( ply, "You have sold this door." )
 			if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 				local doorgroup = DoorGroups[game.GetMap()][entindex]
 				for k,v in pairs( doorgroup.ChildDoors ) do
@@ -216,15 +147,14 @@ net.Receive( "UnownDoor", function( len, ply )
 						end
 					end
 				end
-				DS_Notify( ply, DOOR_CONFIG_MESSAGES["groupsold"] ..doorgroup.Name.." door group." )
+				DS_Notify( ply, "You have also sold all of the doors in the "..doorgroup.Name.." door group." )
 			end
-
 			DoorCoOwners[entindex] = nil
 			net.Start( "SyncCoOwnerClient" )
 			net.WriteTable( DoorCoOwners )
 			net.Broadcast()
 		else
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["notowned"])
+			DS_Notify( ply, "You do not own this door." )
 		end
 	end
 end )
@@ -241,20 +171,6 @@ net.Receive( "SyncDoorTable", function()
 	AddDoorRestriction( index, data )
 end )
 
-util.AddNetworkString( "SyncLockTable" )
-net.Receive( "SyncLockTable", function()
-	local index = net.ReadInt( 32 )
-	local remove = net.ReadBool()
-	local ent = ents.GetByIndex( index )
-	if remove then
-		RemoveDoorLock( index )
-		ent:Fire( "Unlock" )
-		return
-	end
-	AddDoorLock( index )
-	ent:Fire( "Lock" )
-end )
-
 util.AddNetworkString( "SetDoorName" )
 net.Receive( "SetDoorName", function()
 	local ent = net.ReadEntity()
@@ -262,22 +178,15 @@ net.Receive( "SetDoorName", function()
 	ent:SetNWString( "DoorName", name )
 end )
 
-util.AddNetworkString( "DarkRPDoorChat" )
-net.Receive( "DarkRPDoorChat", function()
-	local ply = net.ReadEntity()
-	local text = net.ReadString()
-	DarkRP.notify( ply, 0, 6, text )
-end )
-
 util.AddNetworkString( "SyncCoOwner" )
-net.Receive( "SyncCoOwner", function( len, sender )
+net.Receive( "SyncCoOwner", function( len, ply )
 	local ply = net.ReadEntity()
 	local index = net.ReadInt( 32 )
 	local tbl = net.ReadTable()
 	local remove = net.ReadBool()
 	local door = ents.GetByIndex( index )
 	if DoorTable[index] then
-		DS_Notify( sender, DOOR_CONFIG_MESSAGES["managed"] )
+		DS_Notify( ply, "This door is managed by a group and cannot be owned." )
 		return
 	end
 	if remove then
@@ -305,15 +214,15 @@ local function SellAllDoors( ply )
 			v:Fire( "Unlock" )
 		end
 	end
-	PlayerDoors[ply] = nil
 end
-hook.Add( "PlayerDisconnected", "DS_DoorDisconnect", SellAllDoors )
 
 local function SellAllDoorsCommand( ply, text )
-	if text == DOOR_CONFIG_COMMANDS["sellall"] then
+	local split = string.Split( text, " " )
+	if split[1] == "/sellalldoors" then
 		SellAllDoors( ply )
-		DS_Notify(ply, DOOR_CONFIG_MESSAGES["soldall"])
+		DS_Notify( ply, "You have sold all of your doors." )
 		return ""
 	end
 end
 hook.Add( "PlayerSay", "DS_SellAllDoors", SellAllDoorsCommand )
+hook.Add( "PlayerDisconnected", "DS_DoorDisconnect", SellAllDoors )

@@ -1,21 +1,20 @@
-
 surface.CreateFont( "DoorFont", {
 	font = "Arial",
 	size = 20,
 	weight = 1000
 } )
 
+local allowed = {
+	["prop_door"] = true,
+	["prop_door_rotating"] = true,
+	["func_door"] = true,
+	["func_door_rotating"] = true
+}
+
 local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 local OpenDoorMenuAdmin, OpenDoorMenu
 
 local function DS_Notify( ply, text )
-	if DarkRP then
-		net.Start( "DarkRPDoorChat" )
-		net.WriteEntity( ply )
-		net.WriteString( text )
-		net.SendToServer()
-		return
-	end
 	local textcolor1 = color_black
 	local textcolor2 = color_white
 	chat.AddText( textcolor1, "[Door System]: ", textcolor2, text )
@@ -51,16 +50,16 @@ local function SetDoorName( ply, door )
 	end
 end
 
-local function CheckMenuAccess( ply, door, adminlimited)
-	if DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()] then
-		OpenDoorMenuAdmin( ply, door, adminlimited or false)
+local function CheckMenuAccess( ply, door )
+	if ply:IsSuperAdmin() or ( ply:IsAdmin() and DOOR_CONFIG_ALLOW_ADMIN ) then
+		OpenDoorMenuAdmin( ply, door )
 	else
 		OpenDoorMenu( ply, door )
 	end
 end
 
 local function OpenMenuBasics( menu, ply, door )
-	local entindex = door:EntIndex()
+	local entindex = door:MapCreationID()
 	if door:GetNWEntity( "DoorOwner" ) == ply then
 		local sellbutton = vgui.Create( "DButton", menu )
 		sellbutton:SetText( "Unown Door" )
@@ -184,8 +183,8 @@ local function OpenMenuBasics( menu, ply, door )
 	end
 end
 
-OpenDoorMenuAdmin = function( ply, door, adminlimited)
-	local entindex = door:EntIndex()
+OpenDoorMenuAdmin = function( ply, door )
+	local entindex = door:MapCreationID()
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
 	menu:SetSize( 220, 370 )
@@ -198,32 +197,29 @@ OpenDoorMenuAdmin = function( ply, door, adminlimited)
 		ply.MenuOpen = false
 	end
 
-	if not adminlimited then OpenMenuBasics( menu, ply, door ) end
-
-	local adminSettingsOffset = 0
-	if adminlimited then adminSettingsOffset = 100 end
+	OpenMenuBasics( menu, ply, door )
 
 	local adminlabel = Label( "Admin Settings", menu )
 	adminlabel:SetSize( 190, 15 )
-	adminlabel:SetPos( 70, 190 - adminSettingsOffset)
-	if not adminlimited then
-		local sellbutton = vgui.Create( "DButton", menu )
-		sellbutton:SetText( "Force Remove Ownership" )
-		sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-		sellbutton:SetPos( 30, 210  - adminSettingsOffset)
-		sellbutton:SetSize( 190, 30 )
-		sellbutton:CenterHorizontal()
-		sellbutton.Paint = function( self, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-		end
-		sellbutton.DoClick = function()
-			net.Start( "UnownDoor" )
-			net.WriteEntity( door )
-			net.WriteBool( true )
-			net.SendToServer()
-			menu:Close()
-		end
+	adminlabel:SetPos( 70, 190 )
+
+	local sellbutton = vgui.Create( "DButton", menu )
+	sellbutton:SetText( "Force Remove Ownership" )
+	sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	sellbutton:SetPos( 30, 210 )
+	sellbutton:SetSize( 190, 30 )
+	sellbutton:CenterHorizontal()
+	sellbutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
 	end
+	sellbutton.DoClick = function()
+		net.Start( "UnownDoor" )
+		net.WriteEntity( door )
+		net.WriteBool( true )
+		net.SendToServer()
+		menu:Close()
+	end
+
 	local restrictbutton = vgui.Create( "DButton", menu )
 	if DoorTable[entindex] then
 		restrictbutton:SetText( "Change Restriction" )
@@ -231,7 +227,7 @@ OpenDoorMenuAdmin = function( ply, door, adminlimited)
 		restrictbutton:SetText( "Add Restriction" )
 	end
 	restrictbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	restrictbutton:SetPos( 30, 250 - adminSettingsOffset)
+	restrictbutton:SetPos( 30, 250 )
 	restrictbutton:SetSize( 190, 30 )
 	restrictbutton:CenterHorizontal()
 	restrictbutton.Paint = function( self, w, h )
@@ -239,7 +235,7 @@ OpenDoorMenuAdmin = function( ply, door, adminlimited)
 	end
 	restrictbutton.DoClick = function()
 		local joblist = vgui.Create( "DComboBox", menu )
-		joblist:SetPos( 30, 255 - adminSettingsOffset)
+		joblist:SetPos( 30, 255 )
 		joblist:SetSize( 190, 20 )
 		joblist:CenterHorizontal()
 		joblist:SetValue( "Select Restriction" )
@@ -260,7 +256,7 @@ OpenDoorMenuAdmin = function( ply, door, adminlimited)
 	local restrictremove = vgui.Create( "DButton", menu )
 	restrictremove:SetText( "Remove Restriction" )
 	restrictremove:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-	restrictremove:SetPos( 30, 290 - adminSettingsOffset)
+	restrictremove:SetPos( 30, 290 )
 	restrictremove:SetSize( 190, 30 )
 	restrictremove:CenterHorizontal()
 	restrictremove.Paint = function( self, w, h )
@@ -281,53 +277,29 @@ OpenDoorMenuAdmin = function( ply, door, adminlimited)
 		OpenDoorMenuAdmin( ply, door )
 		DS_Notify( ply, "Door restriction successfully removed." )
 	end
-
-	if DoorTable.Lock and DoorTable.Lock[entindex] then
-		local forcelock = vgui.Create( "DButton", menu )
-		forcelock:SetText( "Disable Force Lock" )
-		forcelock:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-		forcelock:SetPos( 30, 330 - adminSettingsOffset)
-		forcelock:SetSize( 190, 30 )
-		forcelock:CenterHorizontal()
-		forcelock.Paint = function( self, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-		end
-		forcelock.DoClick = function()
-			DoorTable.Lock[entindex] = nil
-			net.Start( "SyncLockTable" )
-			net.WriteInt( entindex, 32 )
-			net.WriteBool( true )
-			net.SendToServer()
-			menu:Close()
-			OpenDoorMenuAdmin( ply, door )
-			DS_Notify( ply, "Door will no longer lock when the server loads." )
-		end
-	else
-		if !DoorTable.Lock then DoorTable.Lock = {} end
-		local forcelock = vgui.Create( "DButton", menu )
-		forcelock:SetText( "Force Lock Door" )
-		forcelock:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-		forcelock:SetPos( 30, 330 - adminSettingsOffset)
-		forcelock:SetSize( 190, 30 )
-		forcelock:CenterHorizontal()
-		forcelock.Paint = function( self, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-		end
-		forcelock.DoClick = function()
-			DoorTable.Lock[entindex] = true
-			net.Start( "SyncLockTable" )
-			net.WriteInt( entindex, 32 )
-			net.SendToServer()
-			menu:Close()
-			OpenDoorMenuAdmin( ply, door )
-			DS_Notify( ply, "Door will now lock when the server loads." )
-		end
+	local disableOwn = vgui.Create( "DButton", menu )
+	disableOwn:SetText( "Disable Ownership" )
+	disableOwn:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	disableOwn:SetPos( 30, 330 )
+	disableOwn:SetSize( 190, 30 )
+	disableOwn:CenterHorizontal()
+	disableOwn.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	disableOwn.DoClick = function()
+		DoorTable[entindex] = -1
+		net.Start( "SyncDoorTable" )
+		net.WriteInt( entindex, 32 )
+		net.WriteInt( -1, 32 )
+		net.SendToServer()
+		menu:Close()
+		DS_Notify( ply, "Ownership disabled." )
 	end
 	ply.MenuOpen = true
 end
 
 OpenDoorMenu = function( ply, door )
-	local entindex = door:EntIndex()
+	local entindex = door:MapCreationID()
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
 	menu:SetSize( 220, 190 )
@@ -364,63 +336,52 @@ local function ListCoOwners( index )
 end
 
 local color_red = DOOR_CONFIG_TEXT_COLOR
-local function DoorHUD()
+hook.Add( "HUDPaint", "DoorHUD", function()
 	local ply = LocalPlayer()
-	if ply.MenuOpen then return end
 	local ent = ply:GetEyeTrace().Entity
-	if not IsValid(ent) then return end
+	if !IsValid( ent ) then return end
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
 	local doorname = ent:GetNWString( "DoorName" )
-	local entindex = ent:EntIndex()
-	local entclass = ent:GetClass()
+	local entindex = ent:MapCreationID()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
-	local validdoor = Door_System_Config.AllowedDoors[entclass]
-	local adminonlydoor = not validdoor and DOOR_CONFIG_ADMIN_CAN_ALWAYS_CONFIGURE[entclass] and DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()]
-
-	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and (validdoor or adminonlydoor) then
+	local map = game.GetMap()
+	if ply.MenuOpen then return end
+	if IsValid( ent ) and ent:CreatedByMap() and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
 		if doorname != "" then
 			draw.SimpleText( doorname, "DoorFont", ScrW() / 2, ScrH() / 2 - 20, DOOR_CONFIG_NAME_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
-		if not adminonlydoor then
-			if IsValid( doorowner) and DoorCoOwners[entindex] and !table.IsEmpty( DoorCoOwners[entindex] ) then
-				draw.SimpleText( "Owners: "..doorowner:Nick()..ListCoOwners( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		if IsValid( doorowner ) and DoorCoOwners[entindex] and !table.IsEmpty( DoorCoOwners[entindex] ) then
+			draw.SimpleText( "Owners: "..doorowner:Nick()..ListCoOwners( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		else
+			if IsValid( doorowner ) then
+				draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 			else
-				if IsValid( doorowner ) then
-					draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-				else
-					if DoorTable[entindex] then
-						draw.SimpleText( "Owner: "..GetDoorRestrictions( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+				if DoorTable[entindex] then
+					if DoorTable[entindex] < 0 then
+						draw.SimpleText( "Owning Disabled", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 					else
-						draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+						draw.SimpleText( GetDoorRestrictions( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 					end
+				else
+					draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				end
 			end
-		else draw.SimpleText( "Admin Only Door", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
 		draw.SimpleText( "Press "..keyname.." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-		if not adminonlydoor and Door_System_Config.ShowDoorHealth then draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER ) end
-		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+		if DoorGroups and DoorGroups[map] and DoorGroups[map][entindex] then
 			draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
 	end
-end
-hook.Add( "HUDPaint", "DoorHUD", DoorHUD )
+end )
 
-local function DoorButtons( ply, button )
+hook.Add( "PlayerButtonDown", "DoorButtons", function( ply, button )
 	local doorkey = GetConVar( "DoorKey" ):GetInt()
 	local ent = ply:GetEyeTrace().Entity
-	if not IsValid(ent) then return end
-	local entclass = ent:GetClass()
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
-	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance then
-		if Door_System_Config.AllowedDoors[entclass] then
-			CheckMenuAccess(ply, ent)
-		elseif (DOOR_CONFIG_ADMIN_CAN_ALWAYS_CONFIGURE[entclass] and DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()]) then
-			CheckMenuAccess(ply, ent, true)
-		end
+	if IsValid( ent ) and ent:CreatedByMap() and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and allowed[ent:GetClass()] then
+		CheckMenuAccess( ply, ent )
 	end
-end
-hook.Add( "PlayerButtonDown", "DoorButtons", DoorButtons )
+end )
 
 net.Receive( "SyncDoorTableClient", function()
 	local tbl = net.ReadTable()

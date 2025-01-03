@@ -8,6 +8,3 @@ hook.Add( "PopulateToolMenu", "DoorConfig", function()
 		} )
 	end )
 end )
-
-Door_System_Config.ShowDoorHealth = false -- Show the door health. 
-		-- This is only useful if you have a door health addon like "Destructible Doors for Gmod!"
