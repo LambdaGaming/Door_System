@@ -43,12 +43,12 @@ local function UpdateDoorTable()
 
 	if !DoorTable.Lock then DoorTable.Lock = {} end
 	for k,v in pairs( ents.FindByClass( "prop_door*" ) ) do
-		if DoorTable.Lock[v:EntIndex()] then
+		if DoorTable.Lock[v:MapCreationID()] then
 			v:Fire( "Lock" )
 		end
 	end
 	for k,v in pairs( ents.FindByClass( "func_door*" ) ) do --Using 2 for loops here since it's still faster than using ents.GetAll
-		if DoorTable.Lock[v:EntIndex()] then
+		if DoorTable.Lock[v:MapCreationID()] then
 			v:Fire( "Lock" )
 		end
 	end
@@ -56,7 +56,7 @@ end
 hook.Add( "InitPostEntity", "UpdateDoorTable", UpdateDoorTable )
 
 local function DoorCloseTimer( ply, ent )
-	local index = ent:EntIndex()
+	local index = ent:MapCreationID()
 	if Door_System_Config.AllowedDoors[ent:GetClass()] and DOOR_CONFIG_AUTO_CLOSE and !timer.Exists( "DoorTimer"..index ) then
 		timer.Create( "DoorTimer"..index, DOOR_CONFIG_CLOSE_TIME, 1, function()
 			if IsValid( ent ) then ent:Fire( "Close" ) end
@@ -102,7 +102,7 @@ net.Receive( "OwnDoor", function( len, ply )
 	local remoteply = net.ReadEntity()
 	local override = net.ReadBool()
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
-	local entindex = ent:EntIndex()
+	local entindex = ent:MapCreationID()
 	if override then
 		ent:SetNWEntity( "DoorOwner", remoteply )
 		DS_Notify(ply, DOOR_CONFIG_MESSAGES["override"])
@@ -178,7 +178,7 @@ net.Receive( "UnownDoor", function( len, ply )
 	local ent = net.ReadEntity()
 	local override = net.ReadBool()
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
-	local entindex = ent:EntIndex()
+	local entindex = ent:MapCreationID()
 	if override then
 		hook.Run("Door_System_Sell", ply, doorowner)
 		if PlayerDoors[doorowner] != nil and PlayerDoors[doorowner] > 0 then

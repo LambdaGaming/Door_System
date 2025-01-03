@@ -60,7 +60,7 @@ local function CheckMenuAccess( ply, door, adminlimited)
 end
 
 local function OpenMenuBasics( menu, ply, door )
-	local entindex = door:EntIndex()
+	local entindex = door:MapCreationID()
 	if door:GetNWEntity( "DoorOwner" ) == ply then
 		local sellbutton = vgui.Create( "DButton", menu )
 		sellbutton:SetText( "Unown Door" )
@@ -185,7 +185,7 @@ local function OpenMenuBasics( menu, ply, door )
 end
 
 OpenDoorMenuAdmin = function( ply, door, adminlimited)
-	local entindex = door:EntIndex()
+	local entindex = door:MapCreationID()
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
 	menu:SetSize( 220, 370 )
@@ -327,7 +327,7 @@ OpenDoorMenuAdmin = function( ply, door, adminlimited)
 end
 
 OpenDoorMenu = function( ply, door )
-	local entindex = door:EntIndex()
+	local entindex = door:MapCreationID()
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
 	menu:SetSize( 220, 190 )
@@ -371,7 +371,7 @@ local function DoorHUD()
 	if not IsValid(ent) then return end
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
 	local doorname = ent:GetNWString( "DoorName" )
-	local entindex = ent:EntIndex()
+	local entindex = ent:MapCreationID()
 	local entclass = ent:GetClass()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
 	local validdoor = Door_System_Config.AllowedDoors[entclass]
