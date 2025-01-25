@@ -43,9 +43,9 @@ local function SetDoorName( ply, door )
 	end
 end
 
-local function CheckMenuAccess( ply, door, adminlimited)
+local function CheckMenuAccess( ply, door, adminlimited )
 	if DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()] then
-		OpenDoorMenuAdmin( ply, door, adminlimited or false)
+		OpenDoorMenuAdmin( ply, door, adminlimited or false )
 	else
 		OpenDoorMenu( ply, door )
 	end
@@ -176,7 +176,7 @@ local function OpenMenuBasics( menu, ply, door )
 	end
 end
 
-OpenDoorMenuAdmin = function( ply, door, adminlimited)
+OpenDoorMenuAdmin = function( ply, door, adminlimited )
 	local entindex = door:MapCreationID()
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
@@ -367,7 +367,7 @@ local function DoorHUD()
 	local entclass = ent:GetClass()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
 	local validdoor = Door_System_Config.AllowedDoors[entclass]
-	local adminonlydoor = not validdoor and DOOR_CONFIG_ADMIN_CAN_ALWAYS_CONFIGURE[entclass] and DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()]
+	local adminonlydoor = not validdoor and DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()]
 
 	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and (validdoor or adminonlydoor) then
 		if doorname != "" then
@@ -407,7 +407,7 @@ local function DoorButtons( ply, button )
 	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance then
 		if Door_System_Config.AllowedDoors[entclass] then
 			CheckMenuAccess(ply, ent)
-		elseif (DOOR_CONFIG_ADMIN_CAN_ALWAYS_CONFIGURE[entclass] and DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()]) then
+		elseif DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()] then
 			CheckMenuAccess(ply, ent, true)
 		end
 	end
