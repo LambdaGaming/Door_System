@@ -52,29 +52,38 @@ DoorRestrictions[2] = {
 	}
 } ]]
 
---Misc Config
+--Price players pay for the doors (Passed as an argument to the DoorSystem_CanBuyDoor hook)
+DOOR_CONFIG_PRICE = 30
 
-DOOR_CONFIG_PRICE = 30 --Price players pay for the doors (Passed as an argument to the DoorSystem_CanBuyDoor hook)
+--Max amount of doors each player can own at once. Set to 0 for unlimited
+DOOR_CONFIG_MAX_AMOUNT = 0
 
-DOOR_CONFIG_MAX_AMOUNT = 0 --Max amount of doors each player can own at once. Set to 0 for unlimited
+--Whether or not a door that's part of a group should have it's owner overridden when buying the parent door
+DOOR_CONFIG_GROUP_OVERRIDE = false
 
-DOOR_CONFIG_GROUP_OVERRIDE = false --Whether or not a door that's part of a group should have it's owner overridden when buying the parent door
+--Color of the menu background
+DOOR_CONFIG_MENU_COLOR = Color( 49, 53, 61, 200 )
 
-DOOR_CONFIG_MENU_COLOR = Color( 49, 53, 61, 200 ) --Color of the menu background
+--Color of the buttons
+DOOR_CONFIG_BUTTON_COLOR = Color( 230, 93, 80, 255 )
 
-DOOR_CONFIG_BUTTON_COLOR = Color( 230, 93, 80, 255 ) --Color of the buttons
+--Color of the door name on the HUD
+DOOR_CONFIG_NAME_COLOR = color_white
 
-DOOR_CONFIG_NAME_COLOR = color_white --Color of the door name on the HUD
+--Color of the rest of the door info on the HUD
+DOOR_CONFIG_TEXT_COLOR = Color( 255, 0, 0 )
 
-DOOR_CONFIG_TEXT_COLOR = Color( 255, 0, 0 ) --Color of the rest of the door info on the HUD
+--Color of the text on the buttons
+DOOR_CONFIG_BUTTON_TEXT_COLOR = color_white
 
-DOOR_CONFIG_BUTTON_TEXT_COLOR = color_white --Color of the text on the buttons
+--Max distance in hammer units away from a door where players can interact with it
+DOOR_CONFIG_DISTANCE = 100
 
-DOOR_CONFIG_DISTANCE = 100 --Max distance in hammer units away from a door where players can interact with it
+--Time in seconds before a door closes after being opened. Useful for doors on maps that can't be closed after they're opened. Set to 0 to disable
+DOOR_CONFIG_CLOSE_TIME = 0
 
-DOOR_CONFIG_CLOSE_TIME = 0 --Time in seconds before a door closes after being opened. Useful for doors on maps that can't be closed after they're opened. Set to 0 to disable
-
-DOOR_CONFIG_ADMIN_RANKS = { --The ranks that have permission to edit door ownerships. Case sensitive
+--The ranks that have permission to edit door ownerships. Case sensitive
+DOOR_CONFIG_ADMIN_RANKS = {
     ["superadmin"] = true,
     --["admin"] = true,
 }
