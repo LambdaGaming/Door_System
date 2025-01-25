@@ -161,7 +161,7 @@ net.Receive( "UnownDoor", function( len, ply )
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
 	local entindex = ent:MapCreationID()
 	if override then
-		hook.Run("Door_System_Sell", ply, doorowner)
+		hook.Run( "DoorSystem_OnSellDoor", ply, ent )
 		if PlayerDoors[doorowner] != nil and PlayerDoors[doorowner] > 0 then
 			PlayerDoors[doorowner] = PlayerDoors[doorowner] - 1
 		end
@@ -183,7 +183,7 @@ net.Receive( "UnownDoor", function( len, ply )
 			if PlayerDoors[ply] != nil and PlayerDoors[ply] > 0 then
 				PlayerDoors[ply] = PlayerDoors[ply] - 1
 			end
-			hook.Run("Door_System_Sell", ply, doorowner)
+			hook.Run( "DoorSystem_OnSellDoor", ply, ent )
 			DS_Notify( ply, "You have sold this door." )
 			if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 				local doorgroup = DoorGroups[game.GetMap()][entindex]

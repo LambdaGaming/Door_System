@@ -19,3 +19,4 @@ Minimalistic door ownership system for Garry's Mod that works on any gamemode. P
 |DoorSystem_CanRam|Server|`Player` ply, `Entity` door|Called when a player attempts to use the door ram on a valid door. Return false to block the ram.|
 |DoorSystem_CanBuyDoor|Server|`Player` ply, `Entity` door, `Number` price|Called when a player is about to purchase a door. Return false to block ownership.|
 |DoorSystem_OnBuyDoor|Server|`Player` ply, `Entity` door, `Number` price|Called after a player purchases a door.|
+|DoorSystem_OnSellDoor|Server|`Player` ply, `Entity` door|Called when a player sells a door.|
