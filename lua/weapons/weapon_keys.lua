@@ -1,4 +1,3 @@
-
 AddCSLuaFile()
 
 SWEP.PrintName = "Keys"
@@ -6,7 +5,7 @@ SWEP.Category = "Door System"
 SWEP.Spawnable = true
 SWEP.AdminSpawnable = true
 SWEP.Base = "weapon_base"
-SWEP.Author = "Lambda Gaming"
+SWEP.Author = "OPGman"
 SWEP.Slot = 2
 SWEP.ViewModel = ""
 SWEP.WorldModel = ""

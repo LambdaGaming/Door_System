@@ -1,5 +1,5 @@
 # Door System
-Minimalistic door ownership system for Garry's Mod that works on any gamemode.
+Minimalistic door ownership system for Garry's Mod that works on any gamemode. Please note however that no specific gamemode is supported out of the box, so if you want this system to work with a currency system for example, you will need to use the provided hooks to add that support yourself.
 
 ## Features
 - Own doors by looking at them and pressing F9. (Can now be customized through the spawn menu to any key.)
@@ -12,3 +12,10 @@ Minimalistic door ownership system for Garry's Mod that works on any gamemode.
 - Door owners can add other players as co-owners, allowing them to lock and unlock those doors.
 - Support for owning whole rooms or buildings without having to manually own each individual door. (Server owners have to set this up manually, this doesn't support any maps out of the box.)
 - Hooks for various functions that allow developers to modify the addon's behavior.
+
+## Hooks
+|Name|Scope|Arguments|Description|
+|----|-----|---------|-----------|
+|DoorSystem_CanRam|Server|`Player` ply, `Entity` door|Called when a player attempts to use the door ram on a valid door. Return false to block the ram.|
+|DoorSystem_CanBuyDoor|Server|`Player` ply, `Entity` door, `Number` price|Called when a player is about to purchase a door. Return false to block ownership.|
+|DoorSystem_OnBuyDoor|Server|`Player` ply, `Entity` door, `Number` price|Called after a player purchases a door.|

@@ -1,4 +1,3 @@
-
 local doorfile = "doorsystem/"..game.GetMap()..".json"
 
 util.AddNetworkString( "SyncDoorTableClient" )
@@ -12,10 +11,6 @@ hook.Add( "PlayerInitialSpawn", "UpdateDoorTableClient", UpdateDoorTableClient )
 
 util.AddNetworkString( "DS_Notify" )
 function DS_Notify( ply, text )
-	if DarkRP then
-		DarkRP.notify( ply, 0, 6, text )
-		return
-	end
 	net.Start( "DS_Notify" )
 	net.WriteString( text )
 	net.Send( ply )
@@ -103,6 +98,9 @@ net.Receive( "OwnDoor", function( len, ply )
 	local override = net.ReadBool()
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
 	local entindex = ent:MapCreationID()
+	if PlayerDoors[ply] == nil then
+		PlayerDoors[ply] = 0
+	end
 	if override then
 		ent:SetNWEntity( "DoorOwner", remoteply )
 		DS_Notify(ply, DOOR_CONFIG_MESSAGES["override"])
@@ -118,57 +116,41 @@ net.Receive( "OwnDoor", function( len, ply )
 		else
 			DS_Notify(ply, DOOR_CONFIG_MESSAGES["owned"])
 		end
-	else
-		if PlayerDoors[ply] == nil then
-			PlayerDoors[ply] = 0
-		end
-		if DarkRP then
-			if DOOR_CONFIG_DOOR_GROUPS_ENABLED and DOOR_CONFIG_CHARGE_EXTRA and DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
-				local doorgroup = DoorGroups[game.GetMap()][entindex]
-				local groupedprice = #doorgroup.ChildDoors * DOOR_CONFIG_PRICE
-				if DOOR_CONFIG_PRICE_CHECK(ply, groupedprice) then
-					hook.Run("Door_System_Purchase", ply, ent, groupedprice)
-					DoorFunctions.DOOR_PURCHASE(ply, groupedprice)
-				else
-					DS_Notify(ply, DOOR_CONFIG_MESSAGES["cantafford"])
-					return
-				end
-				if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
-					local doorgroup = DoorGroups[game.GetMap()][entindex]
-					for k,v in pairs( doorgroup.ChildDoors ) do
-						local childdoor = ents.GetByIndex( v )
-						if IsValid( childdoor ) then
-							if IsValid( childdoor:GetNWEntity( "DoorOwner" ) ) then
-								if DOOR_CONFIG_GROUP_OVERRIDE then
-									childdoor:SetNWEntity( "DoorOwner", ply )
-								end
-							else
-								childdoor:SetNWEntity( "DoorOwner", ply )
-							end					
-						end
+		return
+	end
+	if DOOR_CONFIG_MAX_AMOUNT > 0 and PlayerDoors[ply] >= DOOR_CONFIG_MAX_AMOUNT then
+		DS_Notify( ply, DOOR_CONFIG_MESSAGES["maxdoors"])
+		return
+	end
+	
+	local totalPrice = 0
+	if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+		local doorgroup = DoorGroups[game.GetMap()][entindex]
+		toalPrice = totalPrice + ( #doorgroup.ChildDoors * DOOR_CONFIG_PRICE )
+	end
+	if hook.Run( "DoorSystem_CanBuyDoor", ply, ent, totalPrice ) == false then return end
+
+	DoorFunctions.DOOR_PURCHASE( ply )
+	PlayerDoors[ply] = PlayerDoors[ply] + 1
+	ent:SetNWEntity( "DoorOwner", ply )
+	DS_Notify( ply, DoorFunctions.OWN_MESSAGE( ply ) )
+	hook.Run( "DoorSystem_OnBuyDoor", ply, ent, totalPrice )
+
+	if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+		local doorgroup = DoorGroups[game.GetMap()][entindex]
+		for k,v in pairs( doorgroup.ChildDoors ) do
+			local childdoor = ents.GetMapCreatedEntity( v )
+			if IsValid( childdoor ) then
+				if IsValid( childdoor:GetNWEntity( "DoorOwner" ) ) then
+					if DOOR_CONFIG_GROUP_OVERRIDE then
+						childdoor:SetNWEntity( "DoorOwner", ply )
 					end
-					DS_Notify( ply, "You also now own all of the doors in the "..doorgroup.Name.." door group." )												
-				end
+				else
+					childdoor:SetNWEntity( "DoorOwner", ply )
+				end					
 			end
 		end
-		if DoorFunctions.DOOR_PRICE_CHECK(ply) then
-			if DOOR_CONFIG_ALLOWED_DOOR_AMOUNT > 0 then
-				if PlayerDoors[ply] < DOOR_CONFIG_ALLOWED_DOOR_AMOUNT then
-					hook.Run("Door_System_Purchase", ply, ent, DOOR_CONFIG_ALLOWED_DOOR_AMOUNT)
-					DoorFunctions.DOOR_PURCHASE(ply)
-					PlayerDoors[ply] = PlayerDoors[ply] + 1
-					ent:SetNWEntity( "DoorOwner", ply )
-					DS_Notify( ply, DoorFunctions.OWN_MESSAGE(ply))
-				else DS_Notify( ply, DOOR_CONFIG_MESSAGES["maxdoors"]) end
-			else
-				DoorFunctions.DOOR_PURCHASE(ply)
-				DS_Notify(ply, DoorFunctions.OWN_MESSAGE(ply))
-				ent:SetNWEntity( "DoorOwner", ply )
-			end
-		else
-			DS_Notify(ply, DOOR_CONFIG_MESSAGES["cantafford"])
-			return
-		end
+		DS_Notify( ply, "You also now own all of the doors in the "..doorgroup.Name.." door group." )
 	end
 end )
 
@@ -260,13 +242,6 @@ net.Receive( "SetDoorName", function()
 	local ent = net.ReadEntity()
 	local name = net.ReadString()
 	ent:SetNWString( "DoorName", name )
-end )
-
-util.AddNetworkString( "DarkRPDoorChat" )
-net.Receive( "DarkRPDoorChat", function()
-	local ply = net.ReadEntity()
-	local text = net.ReadString()
-	DarkRP.notify( ply, 0, 6, text )
 end )
 
 util.AddNetworkString( "SyncCoOwner" )

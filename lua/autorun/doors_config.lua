@@ -23,7 +23,7 @@ DoorRestrictions[2] = {
 	end
 }
 
---[[ DoorRestrictions[3] = { --Example for DarkRP jobs
+--[[ DoorRestrictions[3] = { --Example for restricting to certain teams
 	Name = "Police Only",
 	CheckFunction = function( ply )
 		local allowed = {
@@ -31,7 +31,7 @@ DoorRestrictions[2] = {
 			[TEAM_CHIEF] = true,
 			[TEAM_POLICE] = true
 		}
-		return allowed[ply:Team()] --You can also use table.HasValue but this is more efficient
+		return allowed[ply:Team()] --You can also use table.HasValue but this is more optimized
 	end
 } ]]
 
@@ -55,12 +55,9 @@ DoorRestrictions[2] = {
 
 --Misc Config
 
-DOOR_CONFIG_PRICE = 30 --Price players pay for the doors (DarkRP only)
+DOOR_CONFIG_PRICE = 30 --Price players pay for the doors (Passed as an argument to the DoorSystem_CanBuyDoor hook)
 
 DOOR_CONFIG_DOOR_GROUPS_ENABLED = true -- May not work with door amount at the moment
-	DOOR_CONFIG_CHARGE_EXTRA = false --Whether or not players should be charged for each door in a group (DarkRP only)
-
-DOOR_CONFIG_REQUIRE_WARRANT = true --Whether or not cops need a warrant to force open doors with the battering ram (DarkRP only)
 
 DOOR_CONFIG_GROUP_OVERRIDE = false --Whether or not a door that's part of a group should have it's owner overridden when buying the parent door
 
@@ -90,32 +87,11 @@ DOOR_CONFIG_ADMIN_CAN_ALWAYS_CONFIGURE = { -- but you want admins to manage them
 	--["func_door_rotating"] = true,
 }
 
-DOOR_CONFIG_ALLOWED_DOOR_AMOUNT = 0 --How many doors the player may have at any time. If 0, you can own unlimited
-
-
-//Choose one by removing or adding --
-local function DOOR_CONFIG_PRICE_CHECK(ply, price) price = price or DOOR_CONFIG_PRICE return
-	((ply:getDarkRPVar("money") or 0) >= price) //DarkRP
-	--(ply:getChar():hasMoney(price))           //Nut Script
-	--((ply:GetMoney() or 0) >= price)          //BaseWars
-	--ply:SH_CanAffordStandard(price)           //SH Pointshop
-	--ply:PS_HasPoints(price)                   //Pointshop
-	--true                                      //Sandbox
-end
-
-//Choose one by removing or adding --
-//For no currency, be sure to have -- in front of all currencies below
-local function DOOR_CONFIG_PURCHASE(ply, price) price = price or DOOR_CONFIG_PRICE 
-	ply:addMoney(-price)               //DarkRP
-	--ply:getChar():takeMoney(price)   //Nut Script
-	--ply:GiveMoney(-price)            //BaseWars
-	--ply:SH_AddStandardPoints(-price) //SH Pointshop
-	--ply:PS_TakePoints(price)         //Pointshop
-end
+DOOR_CONFIG_MAX_AMOUNT = 0 --Max amount of doors each player can own at once. Set to 0 for unlimited
 
 local function OWN_MESSAGE(ply)
-	if DOOR_CONFIG_ALLOWED_DOOR_AMOUNT > 0 then
-		return DOOR_CONFIG_MESSAGES["purchased"].." You have "..( DOOR_CONFIG_ALLOWED_DOOR_AMOUNT - PlayerDoors[ply] ).." doors remaining."
+	if DOOR_CONFIG_MAX_AMOUNT > 0 then
+		return DOOR_CONFIG_MESSAGES["purchased"].." You have "..( DOOR_CONFIG_MAX_AMOUNT - PlayerDoors[ply] ).." doors remaining."
 	end
 	return DOOR_CONFIG_MESSAGES["purchased"]
 end

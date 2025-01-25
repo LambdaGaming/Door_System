@@ -1,4 +1,3 @@
-
 surface.CreateFont( "DoorFont", {
 	font = "Arial",
 	size = 20,
@@ -9,13 +8,6 @@ local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 local OpenDoorMenuAdmin, OpenDoorMenu
 
 local function DS_Notify( ply, text )
-	if DarkRP then
-		net.Start( "DarkRPDoorChat" )
-		net.WriteEntity( ply )
-		net.WriteString( text )
-		net.SendToServer()
-		return
-	end
 	local textcolor1 = color_black
 	local textcolor2 = color_white
 	chat.AddText( textcolor1, "[Door System]: ", textcolor2, text )
