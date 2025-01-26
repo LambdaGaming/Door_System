@@ -1,4 +1,4 @@
-# Door System
+# Universal Door System
 Minimalistic door ownership system for Garry's Mod that works on any gamemode. Please note however that no specific gamemode is supported out of the box, so if you want this system to work with a currency system for example, you will need to use the provided hooks to add that support yourself. See the [door_config.lua](lua/autorun/doors_config.lua) file for more info.
 
 ## Features

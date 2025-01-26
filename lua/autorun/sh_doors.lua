@@ -19,3 +19,5 @@ function meta:CanUseDoor( index )
 	if !DoorTable[index] then return false end
 	return DoorRestrictions[DoorTable[index]].CheckFunction( self )
 end
+
+print( "Universal Door System v2.0 by OPGman successfully loaded." )
