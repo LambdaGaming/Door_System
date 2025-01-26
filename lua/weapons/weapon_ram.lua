@@ -3,7 +3,6 @@ AddCSLuaFile()
 SWEP.PrintName = "Door Ram"
 SWEP.Category = "Door System"
 SWEP.Spawnable = true
-SWEP.AdminSpawnable = true
 SWEP.Base = "weapon_base"
 SWEP.Author = "OPGman"
 SWEP.Slot = 2
@@ -25,14 +24,6 @@ function SWEP:Initialize()
 	self:SetHoldType( "rpg" )
 end
 
-local function ForceOpen( ply, door )
-	ply:EmitSound( "physics/wood/wood_box_impact_hard3.wav" )
-	timer.Simple( 1, function()
-		door:Fire( "unlock", "", 0 )
-		door:Fire( "open", "", 0 )
-	end )
-end
-
 local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 function SWEP:PrimaryAttack()
 	if !IsFirstTimePredicted() or CLIENT then return end
@@ -41,7 +32,12 @@ function SWEP:PrimaryAttack()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
 	if IsValidDoor( tr ) then
 		if hook.Run( "DoorSystem_CanRam", self.Owner, tr ) == false then return end
-		ForceOpen( self.Owner, tr )
+		ply:EmitSound( "physics/wood/wood_box_impact_hard3.wav" )
+		ply:ViewPunch( Angle( -10, 0, 0 ) )
+		timer.Simple( 1, function()
+			door:Fire( "unlock", "", 0 )
+			door:Fire( "open", "", 0 )
+		end )
 	end
 	self:SetNextPrimaryFire( CurTime() + 1 )
 end
