@@ -43,9 +43,9 @@ local function SetDoorName( ply, door )
 	end
 end
 
-local function CheckMenuAccess( ply, door, adminlimited )
+local function CheckMenuAccess( ply, door )
 	if DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()] then
-		OpenDoorMenuAdmin( ply, door, adminlimited or false )
+		OpenDoorMenuAdmin( ply, door )
 	else
 		OpenDoorMenu( ply, door )
 	end
@@ -176,7 +176,7 @@ local function OpenMenuBasics( menu, ply, door )
 	end
 end
 
-OpenDoorMenuAdmin = function( ply, door, adminlimited )
+OpenDoorMenuAdmin = function( ply, door )
 	local entindex = door:MapCreationID()
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
@@ -190,31 +190,26 @@ OpenDoorMenuAdmin = function( ply, door, adminlimited )
 		ply.MenuOpen = false
 	end
 
-	if not adminlimited then OpenMenuBasics( menu, ply, door ) end
-
-	local adminSettingsOffset = 0
-	if adminlimited then adminSettingsOffset = 100 end
+	OpenMenuBasics( menu, ply, door )
 
 	local adminlabel = Label( "Admin Settings", menu )
 	adminlabel:SetSize( 190, 15 )
-	adminlabel:SetPos( 70, 190 - adminSettingsOffset)
-	if not adminlimited then
-		local sellbutton = vgui.Create( "DButton", menu )
-		sellbutton:SetText( "Force Remove Ownership" )
-		sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
-		sellbutton:SetPos( 30, 210  - adminSettingsOffset)
-		sellbutton:SetSize( 190, 30 )
-		sellbutton:CenterHorizontal()
-		sellbutton.Paint = function( self, w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
-		end
-		sellbutton.DoClick = function()
-			net.Start( "UnownDoor" )
-			net.WriteEntity( door )
-			net.WriteBool( true )
-			net.SendToServer()
-			menu:Close()
-		end
+	adminlabel:SetPos( 70, 190 )
+	local sellbutton = vgui.Create( "DButton", menu )
+	sellbutton:SetText( "Force Remove Ownership" )
+	sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	sellbutton:SetPos( 30, 210  - adminSettingsOffset)
+	sellbutton:SetSize( 190, 30 )
+	sellbutton:CenterHorizontal()
+	sellbutton.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	sellbutton.DoClick = function()
+		net.Start( "UnownDoor" )
+		net.WriteEntity( door )
+		net.WriteBool( true )
+		net.SendToServer()
+		menu:Close()
 	end
 	local restrictbutton = vgui.Create( "DButton", menu )
 	if DoorTable[entindex] then
@@ -366,31 +361,29 @@ local function DoorHUD()
 	local entindex = ent:MapCreationID()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
 	local validdoor = IsValidDoor( ent )
-	local adminonlydoor = not validdoor and DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()]
 	local showHealth = GetConVar( "ShowDoorHealth" ):GetBool()
 
-	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and (validdoor or adminonlydoor) then
+	if IsValidDoor( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance then
 		if doorname != "" then
 			draw.SimpleText( doorname, "DoorFont", ScrW() / 2, ScrH() / 2 - 20, DOOR_CONFIG_NAME_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
-		if not adminonlydoor then
-			if IsValid( doorowner) and DoorCoOwners[entindex] and !table.IsEmpty( DoorCoOwners[entindex] ) then
-				draw.SimpleText( "Owners: "..doorowner:Nick()..ListCoOwners( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		if IsValid( doorowner) and DoorCoOwners[entindex] and !table.IsEmpty( DoorCoOwners[entindex] ) then
+			draw.SimpleText( "Owners: "..doorowner:Nick()..ListCoOwners( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		else
+			if IsValid( doorowner ) then
+				draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 			else
-				if IsValid( doorowner ) then
-					draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+				if DoorTable[entindex] then
+					draw.SimpleText( "Owner: "..GetDoorRestrictions( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				else
-					if DoorTable[entindex] then
-						draw.SimpleText( "Owner: "..GetDoorRestrictions( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-					else
-						draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-					end
+					draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				end
 			end
-		else draw.SimpleText( "Admin Only Door", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
 		draw.SimpleText( "Press "..keyname.." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-		if not adminonlydoor and showHealth then draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER ) end
+		if showHealth then
+			draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		end
 		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 			draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
@@ -401,14 +394,9 @@ hook.Add( "HUDPaint", "DoorHUD", DoorHUD )
 local function DoorButtons( ply, button )
 	local doorkey = GetConVar( "DoorKey" ):GetInt()
 	local ent = ply:GetEyeTrace().Entity
-	if not IsValid(ent) then return end
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
 	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and IsValidDoor( ent ) then
-		if DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()] then
-			CheckMenuAccess( ply, ent, true )
-		else
-			CheckMenuAccess( ply, ent )
-		end
+		CheckMenuAccess( ply, ent )
 	end
 end
 hook.Add( "PlayerButtonDown", "DoorButtons", DoorButtons )
