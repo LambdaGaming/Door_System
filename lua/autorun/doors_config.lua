@@ -42,9 +42,9 @@ DoorRestrictions[2] = {
 ]]
 
 --[[ DoorGroups["rp_rockford_v2b"] = { --Example group config
-	[1022] = { --Parent door's entity index
+	[1022] = { --Parent door's map creation ID
 		Name = "City Hall", --Name that appears on the door
-		ChildDoors = { --Entity indexes of each child door
+		ChildDoors = { --Map creation IDs of each child door
 			1023,
 			1024,
 			1025

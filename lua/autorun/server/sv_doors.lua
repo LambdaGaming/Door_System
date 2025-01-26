@@ -188,7 +188,7 @@ net.Receive( "UnownDoor", function( len, ply )
 			if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 				local doorgroup = DoorGroups[game.GetMap()][entindex]
 				for k,v in pairs( doorgroup.ChildDoors ) do
-					local childdoor = ents.GetByIndex( v )
+					local childdoor = ents.GetMapCreatedEntity( v )
 					if IsValid( childdoor ) then
 						local owner = childdoor:GetNWEntity( "DoorOwner" )
 						if IsValid( owner ) and owner == ply then
@@ -226,7 +226,7 @@ util.AddNetworkString( "SyncLockTable" )
 net.Receive( "SyncLockTable", function()
 	local index = net.ReadInt( 32 )
 	local remove = net.ReadBool()
-	local ent = ents.GetByIndex( index )
+	local ent = ents.GetMapCreatedEntity( index )
 	if remove then
 		RemoveDoorLock( index )
 		ent:Fire( "Unlock" )
@@ -249,7 +249,7 @@ net.Receive( "SyncCoOwner", function( len, sender )
 	local index = net.ReadInt( 32 )
 	local tbl = net.ReadTable()
 	local remove = net.ReadBool()
-	local door = ents.GetByIndex( index )
+	local door = ents.GetMapCreatedEntity( index )
 	if DoorTable[index] then
 		DS_Notify( sender, "This door is managed by a group and cannot be owned." )
 		return
