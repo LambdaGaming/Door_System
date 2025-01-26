@@ -180,7 +180,7 @@ OpenDoorMenuAdmin = function( ply, door )
 	local entindex = door:MapCreationID()
 	local menu = vgui.Create( "DFrame" )
 	menu:SetTitle( "Door Settings" )
-	menu:SetSize( 220, 370 )
+	menu:SetSize( 220, 410 )
 	menu:Center()
 	menu:MakePopup()
 	menu.Paint = function( self, w, h )
@@ -310,6 +310,25 @@ OpenDoorMenuAdmin = function( ply, door )
 			DS_Notify( ply, "Door will now lock when the map loads." )
 		end
 	end
+
+	local disableOwn = vgui.Create( "DButton", menu )
+	disableOwn:SetText( "Disable Ownership" )
+	disableOwn:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
+	disableOwn:SetPos( 30, 370 )
+	disableOwn:SetSize( 190, 30 )
+	disableOwn:CenterHorizontal()
+	disableOwn.Paint = function( self, w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
+	end
+	disableOwn.DoClick = function()
+		DoorTable[entindex] = -1
+		net.Start( "SyncDoorTable" )
+		net.WriteInt( entindex, 32 )
+		net.WriteInt( -1, 32 )
+		net.SendToServer()
+		menu:Close()
+		DS_Notify( ply, "Ownership disabled." )
+	end
 	ply.MenuOpen = true
 end
 
@@ -374,7 +393,11 @@ local function DoorHUD()
 				draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 			else
 				if DoorTable[entindex] then
-					draw.SimpleText( "Owner: "..GetDoorRestrictions( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					if DoorTable[entindex] < 0 then
+						draw.SimpleText( "Owning Disabled", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					else
+						draw.SimpleText( GetDoorRestrictions( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					end
 				else
 					draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				end

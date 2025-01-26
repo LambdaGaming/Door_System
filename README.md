@@ -1,11 +1,11 @@
 # Universal Door System
-Minimalistic door ownership system for Garry's Mod that works on any gamemode. Please note however that no specific gamemode is supported out of the box, so if you want this system to work with a currency system for example, you will need to use the provided hooks to add that support yourself. See the [door_config.lua](lua/autorun/doors_config.lua) file for more info.
+Minimalistic door ownership system for Garry's Mod that works on any gamemode. Please note however that no specific gamemode is supported out of the box, so if you want this system to work with a currency system for example, you will need to use the provided hooks to add that support yourself. See below and the [door_config.lua](lua/autorun/doors_config.lua) file for more info.
 
 ## Features
 - Own doors by looking at them and pressing F9. (Can now be customized through the spawn menu to any key.)
 - Owned doors can be locked and unlocked with the keys.
 - Locked doors can be forced open with the door ram.
-- Admins can force individual doors to have a specific owner, be tied to a group, or lock on map load.
+- Admins can force individual doors to have a specific owner, have ownership disabled entirely, be tied to a group, or lock on map load.
 - Specific owner restrictions and other settings can be configured in the doors_config.lua file.
 - Owner restrictions will save in a JSON file for each map.
 - Door owners can set a custom name to their door that is visible to all players who look at the door.
