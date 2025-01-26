@@ -360,14 +360,14 @@ local function DoorHUD()
 	local ply = LocalPlayer()
 	if ply.MenuOpen then return end
 	local ent = ply:GetEyeTrace().Entity
-	if not IsValid(ent) then return end
+	if !IsValid( ent ) then return end
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
 	local doorname = ent:GetNWString( "DoorName" )
 	local entindex = ent:MapCreationID()
-	local entclass = ent:GetClass()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
-	local validdoor = Door_System_Config.AllowedDoors[entclass]
+	local validdoor = IsValidDoor( ent )
 	local adminonlydoor = not validdoor and DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()]
+	local showHealth = GetConVar( "ShowDoorHealth" ):GetBool()
 
 	if IsValid( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and (validdoor or adminonlydoor) then
 		if doorname != "" then
@@ -390,7 +390,7 @@ local function DoorHUD()
 		else draw.SimpleText( "Admin Only Door", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
 		draw.SimpleText( "Press "..keyname.." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-		if not adminonlydoor and Door_System_Config.ShowDoorHealth then draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER ) end
+		if not adminonlydoor and showHealth then draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER ) end
 		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 			draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		end
@@ -402,13 +402,12 @@ local function DoorButtons( ply, button )
 	local doorkey = GetConVar( "DoorKey" ):GetInt()
 	local ent = ply:GetEyeTrace().Entity
 	if not IsValid(ent) then return end
-	local entclass = ent:GetClass()
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
-	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance then
-		if Door_System_Config.AllowedDoors[entclass] then
-			CheckMenuAccess(ply, ent)
-		elseif DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()] then
-			CheckMenuAccess(ply, ent, true)
+	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and IsValidDoor( ent ) then
+		if DOOR_CONFIG_ADMIN_RANKS[ply:GetUserGroup()] then
+			CheckMenuAccess( ply, ent, true )
+		else
+			CheckMenuAccess( ply, ent )
 		end
 	end
 end

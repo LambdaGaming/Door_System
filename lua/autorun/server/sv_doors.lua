@@ -52,7 +52,7 @@ hook.Add( "InitPostEntity", "UpdateDoorTable", UpdateDoorTable )
 
 local function DoorCloseTimer( ply, ent )
 	local index = ent:MapCreationID()
-	if Door_System_Config.AllowedDoors[ent:GetClass()] and DOOR_CONFIG_CLOSE_TIME > 0 and !timer.Exists( "DoorTimer"..index ) then
+	if IsValidDoor( ent ) and DOOR_CONFIG_CLOSE_TIME > 0 and !timer.Exists( "DoorTimer"..index ) then
 		timer.Create( "DoorTimer"..index, DOOR_CONFIG_CLOSE_TIME, 1, function()
 			if IsValid( ent ) then ent:Fire( "Close" ) end
 		end )

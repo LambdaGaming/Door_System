@@ -39,7 +39,7 @@ function SWEP:PrimaryAttack()
 	local tr = self.Owner:GetEyeTrace().Entity
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
-	if Door_System_Config.AllowedDoors[tr:GetClass()] then
+	if IsValidDoor( tr ) then
 		if hook.Run( "DoorSystem_CanRam", self.Owner, tr ) == false then return end
 		ForceOpen( self.Owner, tr )
 	end

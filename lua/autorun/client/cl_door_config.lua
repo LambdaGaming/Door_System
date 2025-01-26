@@ -1,5 +1,5 @@
-
 CreateClientConVar( "DoorKey", KEY_F9, true, false, "Key that you press to access the menu of a door." )
+CreateClientConVar( "ShowDoorHealth", "0", true, false, "Whether or not a door's health should appear on the HUD when looking at it." )
 
 hook.Add( "PopulateToolMenu", "DoorConfig", function()
     spawnmenu.AddToolMenuOption( "Options", "Door System", "DoorSystem", "Config", "", "", function( panel )
@@ -7,8 +7,9 @@ hook.Add( "PopulateToolMenu", "DoorConfig", function()
 			Label = "Door Menu Key",
 			Command = "DoorKey"
 		} )
+		panel:AddControl( "Checkbox", {
+			Label = "Show Door Health",
+			Command = "ShowDoorHealth"
+		} )
 	end )
 end )
-
-Door_System_Config.ShowDoorHealth = false -- Show the door health. 
-		-- This is only useful if you have a door health addon like "Destructible Doors for Gmod!"

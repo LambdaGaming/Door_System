@@ -47,7 +47,7 @@ function SWEP:PrimaryAttack()
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
 	local index = tr:MapCreationID()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
-    if Door_System_Config.AllowedDoors[tr:GetClass()] then
+    if IsValidDoor( tr ) then
 		if doorowner == self.Owner or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self.Owner ) ) then
 			if SERVER then
 				tr:Fire( "lock", "", 0 )
@@ -73,7 +73,7 @@ function SWEP:SecondaryAttack()
 	local doorowner = tr:GetNWEntity( "DoorOwner" )
 	local index = tr:MapCreationID()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
-    if Door_System_Config.AllowedDoors[tr:GetClass()] then
+    if IsValidDoor( tr ) then
 		if doorowner == self.Owner or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self.Owner ) ) then
 			if SERVER then
 				tr:Fire( "unlock", "", 0 )
