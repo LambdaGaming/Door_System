@@ -20,3 +20,6 @@ Minimalistic door ownership system for Garry's Mod that works on any gamemode. P
 |DoorSystem_CanBuyDoor|Server|`Player` ply, `Entity` door, `Number` price|Called when a player is about to purchase a door. Return false to block ownership.|
 |DoorSystem_OnBuyDoor|Server|`Player` ply, `Entity` door, `Number` price|Called after a player purchases a door.|
 |DoorSystem_OnSellDoor|Server|`Player` ply, `Entity` door|Called when a player sells a door.|
+
+## Issues & Pull Requests
+ If you would like to contribute to this repository by creating an issue or pull request, please refer to the [contributing guidelines.](https://lambdagaming.github.io/contributing.html)
