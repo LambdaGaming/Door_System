@@ -41,3 +41,6 @@ function SWEP:PrimaryAttack()
 	end
 	self:SetNextPrimaryFire( CurTime() + 1 )
 end
+
+function SWEP:SecondaryAttack()
+end
