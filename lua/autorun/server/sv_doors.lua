@@ -256,12 +256,14 @@ net.Receive( "SyncCoOwner", function( len, sender )
 	end
 	if remove then
 		RemoveCoOwner( ply, index )
+		DS_Notify( sender, "Removed "..ply:Nick().." from being a co-owner." )
 		return
 	end
 	AddCoOwner( ply, index )
 	net.Start( "SyncCoOwnerClient" )
 	net.WriteTable( tbl )
 	net.Broadcast()
+	DS_Notify( sender, "Added "..ply:Nick().." as a co-owner." )
 end )
 
 local function SellAllDoors( ply )
