@@ -2,7 +2,6 @@ DoorTable = {
 	Lock = {}
 }
 DoorCoOwners = {}
-Door_System_Config = {}
 
 function IsValidDoor( ent )
 	local doors = {
@@ -16,8 +15,11 @@ end
 
 local meta = FindMetaTable( "Player" )
 function meta:CanUseDoor( index )
-	if !DoorTable[index] then return false end
-	return DoorRestrictions[DoorTable[index]].CheckFunction( self )
+	local tbl = DoorTable[index]
+	if !tbl then return false end
+	local res = DoorRestrictions[tbl]
+	if !res then return false end
+	return res.CheckFunction( self )
 end
 
-print( "Universal Door System v2.0 by OPGman successfully loaded." )
+print( "Universal Door System v2.0.1 by OPGman successfully loaded." )
