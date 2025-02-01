@@ -32,8 +32,8 @@ function SWEP:PrimaryAttack()
 	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
 	if IsValidDoor( tr ) then
 		if hook.Run( "DoorSystem_CanRam", self.Owner, tr ) == false then return end
-		ply:EmitSound( "physics/wood/wood_box_impact_hard3.wav" )
-		ply:ViewPunch( Angle( -10, 0, 0 ) )
+		self.Owner:EmitSound( "physics/wood/wood_box_impact_hard3.wav" )
+		self.Owner:ViewPunch( Angle( -10, 0, 0 ) )
 		timer.Simple( 1, function()
 			door:Fire( "unlock", "", 0 )
 			door:Fire( "open", "", 0 )
