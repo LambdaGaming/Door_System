@@ -10,7 +10,7 @@ function IsValidDoor( ent )
 		["func_door"] = true,
 		["func_door_rotating"] = true
 	}
-	return doors[ent:GetClass()]
+	return IsValid( ent ) and doors[ent:GetClass()]
 end
 
 local meta = FindMetaTable( "Player" )
@@ -22,4 +22,4 @@ function meta:CanUseDoor( index )
 	return res.CheckFunction( self )
 end
 
-print( "Universal Door System v2.0.1 by OPGman successfully loaded." )
+print( "Universal Door System v2.0.2 by OPGman successfully loaded." )

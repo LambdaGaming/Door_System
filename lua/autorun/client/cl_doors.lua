@@ -4,7 +4,6 @@ surface.CreateFont( "DoorFont", {
 	weight = 1000
 } )
 
-local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 local OpenDoorMenuAdmin, OpenDoorMenu
 
 local function DS_Notify( ply, text )
@@ -371,46 +370,43 @@ local function ListCoOwners( index )
 end
 
 local color_red = DOOR_CONFIG_TEXT_COLOR
+local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 local function DoorHUD()
 	local ply = LocalPlayer()
 	if ply.MenuOpen then return end
 	local ent = ply:GetEyeTrace().Entity
-	if !IsValid( ent ) then return end
+	if !IsValidDoor( ent ) or ply:GetPos():DistToSqr( ent:GetPos() ) > distance then return end
 	local doorowner = ent:GetNWEntity( "DoorOwner" )
 	local doorname = ent:GetNWString( "DoorName" )
 	local entindex = ent:MapCreationID()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
-	local validdoor = IsValidDoor( ent )
 	local showHealth = GetConVar( "ShowDoorHealth" ):GetBool()
-
-	if IsValidDoor( ent ) and ply:GetPos():DistToSqr( ent:GetPos() ) < distance then
-		if doorname != "" then
-			draw.SimpleText( doorname, "DoorFont", ScrW() / 2, ScrH() / 2 - 20, DOOR_CONFIG_NAME_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-		end
-		if IsValid( doorowner) and DoorCoOwners[entindex] and !table.IsEmpty( DoorCoOwners[entindex] ) then
-			draw.SimpleText( "Owners: "..doorowner:Nick()..ListCoOwners( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	if doorname != "" then
+		draw.SimpleText( doorname, "DoorFont", ScrW() / 2, ScrH() / 2 - 20, DOOR_CONFIG_NAME_COLOR, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	end
+	if IsValid( doorowner) and DoorCoOwners[entindex] and !table.IsEmpty( DoorCoOwners[entindex] ) then
+		draw.SimpleText( "Owners: "..doorowner:Nick()..ListCoOwners( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	else
+		if IsValid( doorowner ) then
+			draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 		else
-			if IsValid( doorowner ) then
-				draw.SimpleText( "Owner: "..doorowner:Nick(), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-			else
-				if DoorTable[entindex] then
-					if DoorTable[entindex] < 0 then
-						draw.SimpleText( "Owning Disabled", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-					else
-						draw.SimpleText( GetDoorRestrictions( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-					end
+			if DoorTable[entindex] then
+				if DoorTable[entindex] < 0 then
+					draw.SimpleText( "Owning Disabled", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				else
-					draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					draw.SimpleText( GetDoorRestrictions( entindex ), "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				end
+			else
+				draw.SimpleText( "Owner: None", "DoorFont", ScrW() / 2, ScrH() / 2, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 			end
 		end
-		draw.SimpleText( "Press "..keyname.." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-		if showHealth then
-			draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-		end
-		if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
-			draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-		end
+	end
+	draw.SimpleText( "Press "..keyname.." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	if showHealth then
+		draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	end
+	if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+		draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 	end
 end
 hook.Add( "HUDPaint", "DoorHUD", DoorHUD )
@@ -419,7 +415,7 @@ local function DoorButtons( ply, button )
 	local doorkey = GetConVar( "DoorKey" ):GetInt()
 	local ent = ply:GetEyeTrace().Entity
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
-	if IsValid( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance and IsValidDoor( ent ) then
+	if IsValidDoor( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance then
 		CheckMenuAccess( ply, ent )
 	end
 end
