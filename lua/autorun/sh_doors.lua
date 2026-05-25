@@ -36,4 +36,4 @@ function meta:GetDoor()
 	return NULL
 end
 
-print( "Universal Door System v2.0.3 by OPGman successfully loaded." )
+print( "Universal Door System v2.1 by OPGman successfully loaded." )
