@@ -27,8 +27,6 @@ function SWEP:ShouldDrawViewModel()
 	return false
 end
 
-local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
-
 local function KeySound( ply, lock )
 	ply:EmitSound( "npc/metropolice/gear"..math.random( 1, 6 )..".wav" )
 	timer.Simple( 1, function()
@@ -41,53 +39,27 @@ local function KeySound( ply, lock )
 end
 
 function SWEP:PrimaryAttack()
-	if !IsFirstTimePredicted() then return end
-	local tr = self.Owner:GetEyeTrace().Entity
-	local doorowner = tr:GetNWEntity( "DoorOwner" )
-	local index = tr:MapCreationID()
-	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
-    if IsValidDoor( tr ) then
-		if doorowner == self.Owner or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self.Owner ) ) then
-			if SERVER then
-				tr:Fire( "lock", "", 0 )
-				KeySound( self.Owner, true )
-			end
-		else
-			if self.Owner:CanUseDoor( tr:MapCreationID() ) then
-				if SERVER then
-					tr:Fire( "lock", "", 0 )
-					KeySound( self.Owner, true )
-				end
-			else
-				if SERVER then self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" ) end
-			end
-		end
+	if !IsFirstTimePredicted() or CLIENT then return end
+	local door = self.Owner:GetDoor()
+	if !IsValid( door ) then return end
+	if self.Owner:CanUseDoor( door ) then
+		door:Fire( "lock", "", 0 )
+		KeySound( self.Owner, true )
+	else
+		self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" )
 	end
     self:SetNextPrimaryFire( CurTime() + 0.1 )
 end
 
 function SWEP:SecondaryAttack()
-	if !IsFirstTimePredicted() then return end
-	local tr = self.Owner:GetEyeTrace().Entity
-	local doorowner = tr:GetNWEntity( "DoorOwner" )
-	local index = tr:MapCreationID()
-	if self.Owner:GetPos():DistToSqr( tr:GetPos() ) > distance then return end
-    if IsValidDoor( tr ) then
-		if doorowner == self.Owner or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self.Owner ) ) then
-			if SERVER then
-				tr:Fire( "unlock", "", 0 )
-				KeySound( self.Owner )
-			end
-		else
-			if self.Owner:CanUseDoor( tr:MapCreationID() ) then
-				if SERVER then
-					tr:Fire( "unlock", "", 0 )
-					KeySound( self.Owner )
-				end
-			else
-				if SERVER then self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" ) end
-			end
-		end
+	if !IsFirstTimePredicted() or CLIENT then return end
+	local door = self.Owner:GetDoor()
+	if !IsValid( door ) then return end
+	if self.Owner:CanUseDoor( door ) then
+		door:Fire( "unlock", "", 0 )
+		KeySound( self.Owner )
+	else
+		self.Owner:EmitSound( "physics/wood/wood_crate_impact_hard2.wav" )
 	end
     self:SetNextPrimaryFire( CurTime() + 0.1 )
 end

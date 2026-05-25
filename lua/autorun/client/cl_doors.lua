@@ -370,15 +370,14 @@ local function ListCoOwners( index )
 end
 
 local color_red = DOOR_CONFIG_TEXT_COLOR
-local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
 local function DoorHUD()
 	local ply = LocalPlayer()
 	if ply.MenuOpen then return end
-	local ent = ply:GetEyeTrace().Entity
-	if !IsValidDoor( ent ) or ply:GetPos():DistToSqr( ent:GetPos() ) > distance then return end
-	local doorowner = ent:GetNWEntity( "DoorOwner" )
-	local doorname = ent:GetNWString( "DoorName" )
-	local entindex = ent:MapCreationID()
+	local door = ply:GetDoor()
+	if !IsValid( door ) then return end
+	local doorowner = door:GetNWEntity( "DoorOwner" )
+	local doorname = door:GetNWString( "DoorName" )
+	local entindex = door:MapCreationID()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
 	local showHealth = GetConVar( "ShowDoorHealth" ):GetBool()
 	if doorname != "" then
@@ -403,7 +402,7 @@ local function DoorHUD()
 	end
 	draw.SimpleText( "Press "..keyname.." for door options.", "DoorFont", ScrW() / 2, ScrH() / 2 + 20, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 	if showHealth then
-		draw.SimpleText( "Heath: " .. ent:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		draw.SimpleText( "Heath: " .. door:Health(), "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 	end
 	if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
 		draw.SimpleText( "Door Group: "..doorgroups.Name, "DoorFont", ScrW() / 2, ScrH() / 2 + 40, color_red, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
@@ -412,11 +411,11 @@ end
 hook.Add( "HUDPaint", "DoorHUD", DoorHUD )
 
 local function DoorButtons( ply, button )
-	local doorkey = GetConVar( "DoorKey" ):GetInt()
-	local ent = ply:GetEyeTrace().Entity
 	if !IsFirstTimePredicted() or ply.MenuOpen then return end
-	if IsValidDoor( ent ) and button == doorkey and ply:GetPos():DistToSqr( ent:GetPos() ) < distance then
-		CheckMenuAccess( ply, ent )
+	local doorkey = GetConVar( "DoorKey" ):GetInt()
+	local door = ply:GetDoor()
+	if button == doorkey and IsValid( door ) then
+		CheckMenuAccess( ply, door )
 	end
 end
 hook.Add( "PlayerButtonDown", "DoorButtons", DoorButtons )

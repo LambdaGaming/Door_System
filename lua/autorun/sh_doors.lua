@@ -14,7 +14,12 @@ function IsValidDoor( ent )
 end
 
 local meta = FindMetaTable( "Player" )
-function meta:CanUseDoor( index )
+function meta:CanUseDoor( door )
+	local owner = door:GetNWEntity( "DoorOwner" )
+	local index = door:MapCreationID()
+	if owner == self or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self ) ) then
+		return true
+	end
 	local tbl = DoorTable[index]
 	if !tbl then return false end
 	local res = DoorRestrictions[tbl]
@@ -22,4 +27,13 @@ function meta:CanUseDoor( index )
 	return res.CheckFunction( self )
 end
 
-print( "Universal Door System v2.0.2 by OPGman successfully loaded." )
+function meta:GetDoor()
+	local distance = DOOR_CONFIG_DISTANCE * DOOR_CONFIG_DISTANCE
+	local ent = self:GetEyeTrace().Entity
+	if IsValidDoor( ent ) and self:GetPos():DistToSqr( ent:GetPos() ) < distance then
+		return ent
+	end
+	return NULL
+end
+
+print( "Universal Door System v2.0.3 by OPGman successfully loaded." )
