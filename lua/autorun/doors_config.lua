@@ -1,6 +1,6 @@
-DoorRestrictions = {} --Initializes the door restrictions table, don't touch
-DoorGroups = {}
-PlayerDoors = {}
+DoorRestrictions = DoorRestrictions or {} --Initializes the door restrictions table, don't touch
+DoorGroups = DoorGroups or {}
+PlayerDoors = PlayerDoors or {}
 
 --[[
 	Below are the configs for the door restrictions. Each table includes

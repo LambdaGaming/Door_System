@@ -9,6 +9,7 @@ SWEP.Slot = 2
 SWEP.ViewModel = "models/weapons/c_rpg.mdl"
 SWEP.WorldModel = "models/weapons/w_rocket_launcher.mdl"
 SWEP.UseHands = true
+SWEP.OpenSound = "physics/wood/wood_box_impact_hard3.wav"
 
 SWEP.Primary.Ammo = "none"
 SWEP.Primary.ClipSize = -1
@@ -29,7 +30,7 @@ function SWEP:PrimaryAttack()
 	local door = self.Owner:GetDoor()
 	if !IsValid( door ) then return end
 	if hook.Run( "DoorSystem_CanRam", self.Owner, door ) == false then return end
-	self.Owner:EmitSound( "physics/wood/wood_box_impact_hard3.wav" )
+	self.Owner:EmitSound( self.OpenSound )
 	self.Owner:ViewPunch( Angle( -10, 0, 0 ) )
 	timer.Simple( 1, function()
 		door:Fire( "unlock", "", 0 )
