@@ -13,9 +13,14 @@ function IsValidDoor( ent )
 	return IsValid( ent ) and doors[ent:GetClass()]
 end
 
+local metaEnt = FindMetaTable( "Entity" )
+function metaEnt:GetDoorOwner()
+	return self:GetNWEntity( "DoorOwner" )
+end
+
 local meta = FindMetaTable( "Player" )
 function meta:CanUseDoor( door )
-	local owner = door:GetNWEntity( "DoorOwner" )
+	local owner = door:GetDoorOwner()
 	local index = door:MapCreationID()
 	if owner == self or ( DoorCoOwners[index] and table.HasValue( DoorCoOwners[index], self ) ) then
 		return true
@@ -36,4 +41,4 @@ function meta:GetDoor()
 	return NULL
 end
 
-print( "Universal Door System v2.1.1 by OPGman successfully loaded." )
+print( "Universal Door System v2.1.2 by OPGman successfully loaded." )

@@ -20,7 +20,7 @@ function LoadDoorTable( sync )
 	local readtable = util.JSONToTable( file.Read( doorfile ) )
 	DoorTable = readtable
 	if sync then
-		for k,v in pairs( player.GetAll() ) do
+		for k,v in ipairs( player.GetAll() ) do
 			net.Start( "SyncDoorTableClient" )
 			net.WriteTable( readtable )
 			net.Send( v )
@@ -37,12 +37,12 @@ local function UpdateDoorTable()
 	LoadDoorTable()
 
 	if !DoorTable.Lock then DoorTable.Lock = {} end
-	for k,v in pairs( ents.FindByClass( "prop_door*" ) ) do
+	for k,v in ipairs( ents.FindByClass( "prop_door*" ) ) do
 		if DoorTable.Lock[v:MapCreationID()] then
 			v:Fire( "Lock" )
 		end
 	end
-	for k,v in pairs( ents.FindByClass( "func_door*" ) ) do --Using 2 for loops here since it's still faster than using ents.GetAll
+	for k,v in ipairs( ents.FindByClass( "func_door*" ) ) do --Using 2 for loops here since it's still faster than using ents.GetAll
 		if DoorTable.Lock[v:MapCreationID()] then
 			v:Fire( "Lock" )
 		end
@@ -94,27 +94,20 @@ end
 util.AddNetworkString( "OwnDoor" )
 net.Receive( "OwnDoor", function( len, ply )
 	local ent = net.ReadEntity()
-	local remoteply = net.ReadEntity()
-	local override = net.ReadBool()
-	local doorowner = ent:GetNWEntity( "DoorOwner" )
+	local owner = ent:GetDoorOwner()
 	local entindex = ent:MapCreationID()
 	if PlayerDoors[ply] == nil then
 		PlayerDoors[ply] = 0
 	end
-	if override then
-		ent:SetNWEntity( "DoorOwner", remoteply )
-		DS_Notify( ply, "Door ownership override successful." )
-		return
-	end
 	if DoorTable[entindex] then
-		DS_Notify(ply, "This door is managed by a group and cannot be owned." )
+		DS_Notify( ply, "This door is managed by a group and cannot be owned." )
 		return
 	end
-	if IsValid( doorowner ) then
-		if doorowner != ply then
-			DS_Notify(ply, "You do not own this door." )
+	if IsValid( owner ) then
+		if owner != ply then
+			DS_Notify( ply, "You do not own this door." )
 		else
-			DS_Notify(ply, "This door is already owned by someone else." )
+			DS_Notify( ply, "This door is already owned by someone else." )
 		end
 		return
 	end
@@ -140,7 +133,7 @@ net.Receive( "OwnDoor", function( len, ply )
 		for k,v in pairs( doorgroup.ChildDoors ) do
 			local childdoor = ents.GetMapCreatedEntity( v )
 			if IsValid( childdoor ) then
-				if IsValid( childdoor:GetNWEntity( "DoorOwner" ) ) then
+				if IsValid( childdoor:GetDoorOwner() ) then
 					if DOOR_CONFIG_GROUP_OVERRIDE then
 						childdoor:SetNWEntity( "DoorOwner", ply )
 					end
@@ -158,9 +151,9 @@ util.AddNetworkString( "SyncCoOwnerClient" )
 net.Receive( "UnownDoor", function( len, ply )
 	local ent = net.ReadEntity()
 	local override = net.ReadBool()
-	local doorowner = ent:GetNWEntity( "DoorOwner" )
+	local doorowner = ent:GetDoorOwner()
 	local entindex = ent:MapCreationID()
-	if override then
+	if override and ply:IsAdmin() then
 		hook.Run( "DoorSystem_OnSellDoor", ply, ent )
 		if PlayerDoors[doorowner] != nil and PlayerDoors[doorowner] > 0 then
 			PlayerDoors[doorowner] = PlayerDoors[doorowner] - 1
@@ -175,46 +168,47 @@ net.Receive( "UnownDoor", function( len, ply )
 		net.Broadcast()
 		return
 	end
-	if IsValid( doorowner ) then
-		if doorowner == ply then
-			ent:SetNWEntity( "DoorOwner", NULL )
-			ent:SetNWString( "DoorName", "" )
-			ent:Fire( "unlock", "", 0 )
-			if PlayerDoors[ply] != nil and PlayerDoors[ply] > 0 then
-				PlayerDoors[ply] = PlayerDoors[ply] - 1
-			end
-			hook.Run( "DoorSystem_OnSellDoor", ply, ent )
-			DS_Notify( ply, "You have sold this door." )
-			if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
-				local doorgroup = DoorGroups[game.GetMap()][entindex]
-				for k,v in pairs( doorgroup.ChildDoors ) do
-					local childdoor = ents.GetMapCreatedEntity( v )
-					if IsValid( childdoor ) then
-						local owner = childdoor:GetNWEntity( "DoorOwner" )
-						if IsValid( owner ) and owner == ply then
-							childdoor:SetNWEntity( "DoorOwner", NULL )
-							childdoor:SetNWString( "DoorName", "" )
-						end
-					end
-				end
-				DS_Notify( ply, "You have also sold all of the doors in the "..doorgroup.Name.." door group." )
-			end
-
-			DoorCoOwners[entindex] = nil
-			net.Start( "SyncCoOwnerClient" )
-			net.WriteTable( DoorCoOwners )
-			net.Broadcast()
-		else
-			DS_Notify(ply, "You do not own this door." )
-		end
+	if !IsValid( doorowner ) then return end
+	if doorowner != ply then
+		DS_Notify(ply, "You do not own this door." )
+		return
 	end
+
+	ent:SetNWEntity( "DoorOwner", NULL )
+	ent:SetNWString( "DoorName", "" )
+	ent:Fire( "unlock", "", 0 )
+	if PlayerDoors[ply] != nil and PlayerDoors[ply] > 0 then
+		PlayerDoors[ply] = PlayerDoors[ply] - 1
+	end
+	hook.Run( "DoorSystem_OnSellDoor", ply, ent )
+	DS_Notify( ply, "You have sold this door." )
+	if DoorGroups and DoorGroups[game.GetMap()] and DoorGroups[game.GetMap()][entindex] then
+		local doorgroup = DoorGroups[game.GetMap()][entindex]
+		for k,v in pairs( doorgroup.ChildDoors ) do
+			local childdoor = ents.GetMapCreatedEntity( v )
+			if IsValid( childdoor ) then
+				local owner = childdoor:GetDoorOwner()
+				if IsValid( owner ) and owner == ply then
+					childdoor:SetNWEntity( "DoorOwner", NULL )
+					childdoor:SetNWString( "DoorName", "" )
+				end
+			end
+		end
+		DS_Notify( ply, "You have also sold all of the doors in the "..doorgroup.Name.." door group." )
+	end
+
+	DoorCoOwners[entindex] = nil
+	net.Start( "SyncCoOwnerClient" )
+	net.WriteTable( DoorCoOwners )
+	net.Broadcast()
 end )
 
 util.AddNetworkString( "SyncDoorTable" )
-net.Receive( "SyncDoorTable", function()
+net.Receive( "SyncDoorTable", function( len, ply )
 	local index = net.ReadInt( 32 )
 	local data = net.ReadInt( 32 )
 	local remove = net.ReadBool()
+	if !ply:IsAdmin() then return end
 	if remove then
 		RemoveDoorRestriction( index )
 		return
@@ -223,10 +217,11 @@ net.Receive( "SyncDoorTable", function()
 end )
 
 util.AddNetworkString( "SyncLockTable" )
-net.Receive( "SyncLockTable", function()
+net.Receive( "SyncLockTable", function( len, ply )
 	local index = net.ReadInt( 32 )
 	local remove = net.ReadBool()
 	local ent = ents.GetMapCreatedEntity( index )
+	if !ply:IsAdmin() then return end
 	if remove then
 		RemoveDoorLock( index )
 		ent:Fire( "Unlock" )
@@ -237,9 +232,10 @@ net.Receive( "SyncLockTable", function()
 end )
 
 util.AddNetworkString( "SetDoorName" )
-net.Receive( "SetDoorName", function()
+net.Receive( "SetDoorName", function( len, ply )
 	local ent = net.ReadEntity()
 	local name = net.ReadString()
+	if ent:GetDoorOwner() != ply and !ply:IsAdmin() then return end
 	ent:SetNWString( "DoorName", name )
 end )
 
@@ -250,6 +246,7 @@ net.Receive( "SyncCoOwner", function( len, sender )
 	local tbl = net.ReadTable()
 	local remove = net.ReadBool()
 	local door = ents.GetMapCreatedEntity( index )
+	if door:GetDoorOwner() != sender and !sender:IsAdmin() then return end
 	if DoorTable[index] then
 		DS_Notify( sender, "This door is managed by a group and cannot be owned." )
 		return
@@ -267,15 +264,15 @@ net.Receive( "SyncCoOwner", function( len, sender )
 end )
 
 local function SellAllDoors( ply )
-	for k,v in pairs( ents.FindByClass( "prop_door*" ) ) do
-		if v:GetNWEntity( "DoorOwner" ) == ply then
+	for k,v in ipairs( ents.FindByClass( "prop_door*" ) ) do
+		if v:GetDoorOwner() == ply then
 			v:SetNWEntity( "DoorOwner", NULL )
 			v:SetNWString( "DoorName", "" )
 			v:Fire( "Unlock" )
 		end
 	end
-	for k,v in pairs( ents.FindByClass( "func_door*" ) ) do
-		if v:GetNWEntity( "DoorOwner" ) == ply then
+	for k,v in ipairs( ents.FindByClass( "func_door*" ) ) do
+		if v:GetDoorOwner() == ply then
 			v:SetNWEntity( "DoorOwner", NULL )
 			v:SetNWString( "DoorName", "" )
 			v:Fire( "Unlock" )

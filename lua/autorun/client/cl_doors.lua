@@ -17,7 +17,7 @@ net.Receive( "DS_Notify", function( len, ply )
 end )
 
 local function SetDoorName( ply, door )
-	local owner = door:GetNWEntity( "DoorOwner" )
+	local owner = door:GetDoorOwner()
 	if owner != ply then
 		DS_Notify( ply, "You do not own this door." )
 		return
@@ -52,7 +52,7 @@ end
 
 local function OpenMenuBasics( menu, ply, door )
 	local entindex = door:MapCreationID()
-	if door:GetNWEntity( "DoorOwner" ) == ply then
+	if door:GetDoorOwner() == ply then
 		local sellbutton = vgui.Create( "DButton", menu )
 		sellbutton:SetText( "Unown Door" )
 		sellbutton:SetTextColor( DOOR_CONFIG_BUTTON_TEXT_COLOR )
@@ -109,7 +109,7 @@ local function OpenMenuBasics( menu, ply, door )
 		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
 	end
 	coowner.DoClick = function()
-		if door:GetNWEntity( "DoorOwner" ) != ply then
+		if door:GetDoorOwner() != ply then
 			DS_Notify( ply, "Only the owner of this door can add or remove co-owners." )
 			return
 		end
@@ -119,7 +119,7 @@ local function OpenMenuBasics( menu, ply, door )
 		plylist:SetSize( 190, 20 )
 		plylist:CenterHorizontal()
 		plylist:SetValue( "Select Player" )
-		for k,v in pairs( player.GetAll() ) do
+		for k,v in ipairs( player.GetAll() ) do
 			if !table.HasValue( DoorCoOwners[entindex], v ) and v != ply then
 				plylist:AddChoice( v:Nick(), v )
 			end
@@ -147,7 +147,7 @@ local function OpenMenuBasics( menu, ply, door )
 		draw.RoundedBox( 0, 0, 0, w, h, DOOR_CONFIG_BUTTON_COLOR )
 	end
 	coowner.DoClick = function()
-		if door:GetNWEntity( "DoorOwner" ) != ply then
+		if door:GetDoorOwner() != ply then
 			DS_Notify( ply, "Only the owner of this door can add or remove co-owners." )
 			return
 		end
@@ -157,7 +157,7 @@ local function OpenMenuBasics( menu, ply, door )
 		plylist:SetSize( 190, 20 )
 		plylist:CenterHorizontal()
 		plylist:SetValue( "Select Player" )
-		for k,v in pairs( player.GetAll() ) do
+		for k,v in ipairs( player.GetAll() ) do
 			if table.HasValue( DoorCoOwners[entindex], v ) and v != ply then
 				plylist:AddChoice( v:Nick(), v )
 			end
@@ -375,7 +375,7 @@ local function DoorHUD()
 	if ply.MenuOpen then return end
 	local door = ply:GetDoor()
 	if !IsValid( door ) then return end
-	local doorowner = door:GetNWEntity( "DoorOwner" )
+	local doorowner = door:GetDoorOwner()
 	local doorname = door:GetNWString( "DoorName" )
 	local entindex = door:MapCreationID()
 	local keyname = language.GetPhrase( input.GetKeyName( GetConVar( "DoorKey" ):GetInt() ) )
